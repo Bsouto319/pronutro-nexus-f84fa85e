@@ -1,7 +1,12 @@
 import { motion } from "framer-motion";
 import { Search, Bell, Plus } from "lucide-react";
 
-export function TopBar() {
+interface TopBarProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export function TopBar({ title = "Dashboard", subtitle = "Bem-vindo de volta! Aqui está o resumo da clínica." }: TopBarProps) {
   return (
     <motion.header
       initial={{ opacity: 0, y: -10 }}
@@ -10,8 +15,8 @@ export function TopBar() {
       className="h-16 border-b border-border flex items-center justify-between px-6"
     >
       <div>
-        <h1 className="text-lg font-display font-bold text-foreground">Dashboard</h1>
-        <p className="text-xs text-muted-foreground">Bem-vindo de volta! Aqui está o resumo da clínica.</p>
+        <h1 className="text-lg font-display font-bold text-foreground">{title}</h1>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
       </div>
 
       <div className="flex items-center gap-3">
