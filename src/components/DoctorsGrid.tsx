@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 
 const doctors = [
-  { name: "Dr. Carlos Mendes", specialty: "Dermatologia Estética", patients: 48, rating: 4.9, avatar: "CM" },
-  { name: "Dra. Ana Lima", specialty: "Nutrologia", patients: 52, rating: 4.8, avatar: "AL" },
-  { name: "Dr. Pedro Alves", specialty: "Medicina Estética", patients: 41, rating: 4.9, avatar: "PA" },
-  { name: "Dra. Juliana Rocha", specialty: "Nutrologia Esportiva", patients: 37, rating: 4.7, avatar: "JR" },
-  { name: "Dr. Lucas Neto", specialty: "Harmonização Facial", patients: 55, rating: 4.9, avatar: "LN" },
-  { name: "Dra. Patrícia Souza", specialty: "Nutrição Clínica", patients: 44, rating: 4.8, avatar: "PS" },
+  { name: "Dr. Augusto Margon", specialty: "Nutrólogo, Psiquiatra e Intensivista", patients: 124, rating: 5.0, avatar: "AM", price: "R$ 930" },
+  { name: "Dr. Celso Melo", specialty: "Nutrólogo e Cirurgião Proctologista", patients: 89, rating: 4.9, avatar: "CM", price: "R$ 650" },
+  { name: "Dr. Marcus Gesteira", specialty: "Emagrecimento (Atende Convênios)", patients: 156, rating: 4.8, avatar: "MG", price: "R$ 560" },
+  { name: "Dra. Vanessa Melo", specialty: "Pediatra e Nutrologia (Convênios)", patients: 142, rating: 4.9, avatar: "VM", price: "R$ 560" },
+  { name: "Dra. Kelly Felippes", specialty: "Saúde e Fertilidade da Mulher", patients: 95, rating: 4.9, avatar: "KF", price: "R$ 500" },
+  { name: "Gisele Falcão", specialty: "Enfermeira Esteta", patients: 78, rating: 4.8, avatar: "GF", price: "R$ 200 (Aval.)" },
 ];
 
 const colors = [

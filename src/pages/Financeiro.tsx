@@ -8,28 +8,32 @@ import { BankAccounts } from "@/components/financeiro/BankAccounts";
 import { ExpenseCategories } from "@/components/financeiro/ExpenseCategories";
 import { FinanceCharts } from "@/components/financeiro/FinanceCharts";
 import { TransactionsTable } from "@/components/financeiro/TransactionsTable";
-import { motion } from "framer-motion";
+import { AICapture } from "@/components/financeiro/AICapture";
 
 const Financeiro = () => {
   return (
     <AppLayout>
       <TopBar title="Financeiro" subtitle="Controle financeiro completo da clínica" />
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
+        <AICapture />
         <FinanceKPIs />
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DoctorRevenue />
           <PatientsList />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <PaymentMethods />
           <BankAccounts />
         </div>
 
         <ExpenseCategories />
-        <FinanceCharts />
-        <TransactionsTable />
+
+        <div className="grid grid-cols-1 gap-6">
+          <FinanceCharts />
+          <TransactionsTable />
+        </div>
       </div>
     </AppLayout>
   );

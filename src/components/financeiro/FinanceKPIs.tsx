@@ -1,18 +1,30 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, BarChart3, Stethoscope, Users, Receipt } from "lucide-react";
-import { formatCurrency, totalEntradas, totalSaidas, saldo, totalTransacoes, totalMedicos, totalPacientes } from "./financeData";
-
-const kpis = [
-  { title: "Total Transações", value: String(totalTransacoes), icon: Receipt, type: "neutral" as const },
-  { title: "Entradas", value: formatCurrency(totalEntradas), icon: TrendingUp, type: "positive" as const },
-  { title: "Saídas", value: formatCurrency(totalSaidas), icon: TrendingDown, type: "negative" as const },
-  { title: "Saldo", value: formatCurrency(saldo), icon: BarChart3, type: saldo >= 0 ? "positive" as const : "negative" as const },
-  { title: "Médicos", value: String(totalMedicos), icon: Stethoscope, type: "neutral" as const },
-  { title: "Pacientes", value: String(totalPacientes), icon: Users, type: "neutral" as const },
-];
+import { formatCurrency } from "./financeData";
+import { useFinanceData } from "@/hooks/useFinanceData";
 
 export function FinanceKPIs() {
+  const { kpis: data, isLoading } = useFinanceData();
+
+  const kpis = [
+    { title: "Total Transações", value: String(data.totalTransacoes), icon: Receipt, type: "neutral" as const },
+    { title: "Entradas", value: formatCurrency(data.totalEntradas), icon: TrendingUp, type: "positive" as const },
+    { title: "Saídas", value: formatCurrency(data.totalSaidas), icon: TrendingDown, type: "negative" as const },
+    { title: "Saldo", value: formatCurrency(data.saldo), icon: BarChart3, type: data.saldo >= 0 ? "positive" as const : "negative" as const },
+    { title: "Médicos", value: String(data.totalMedicos), icon: Stethoscope, type: "neutral" as const },
+    { title: "Pacientes", value: String(data.totalPacientes), icon: Users, type: "neutral" as const },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="glass rounded-xl p-4 h-24 animate-pulse bg-muted/20" />
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
       {kpis.map((kpi, i) => (
