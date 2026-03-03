@@ -14,16 +14,277 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bank_accounts: {
+        Row: {
+          created_at: string
+          entradas: number
+          id: string
+          name: string
+          organization_id: string
+          saidas: number
+          saldo: number
+        }
+        Insert: {
+          created_at?: string
+          entradas?: number
+          id?: string
+          name: string
+          organization_id: string
+          saidas?: number
+          saldo?: number
+        }
+        Update: {
+          created_at?: string
+          entradas?: number
+          id?: string
+          name?: string
+          organization_id?: string
+          saidas?: number
+          saldo?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_doctors: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          patients_count: number
+          revenue: number
+          specialty: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          patients_count?: number
+          revenue?: number
+          specialty?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          patients_count?: number
+          revenue?: number
+          specialty?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_doctors_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_patients: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          id: string
+          name: string
+          organization_id: string
+          payment_method: string | null
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          payment_method?: string | null
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          payment_method?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_patients_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinic_patients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_transactions: {
+        Row: {
+          bank: string | null
+          category: string | null
+          created_at: string
+          date: string
+          description: string | null
+          doctor: string | null
+          id: string
+          installments: number
+          organization_id: string
+          patient: string | null
+          payment_date: string | null
+          payment_method: string | null
+          type: string
+          value_in: number
+          value_out: number
+        }
+        Insert: {
+          bank?: string | null
+          category?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          doctor?: string | null
+          id?: string
+          installments?: number
+          organization_id: string
+          patient?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          type: string
+          value_in?: number
+          value_out?: number
+        }
+        Update: {
+          bank?: string | null
+          category?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          doctor?: string | null
+          id?: string
+          installments?: number
+          organization_id?: string
+          patient?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          type?: string
+          value_in?: number
+          value_out?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "manager" | "doctor" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +411,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "manager", "doctor", "staff"],
+    },
   },
 } as const
