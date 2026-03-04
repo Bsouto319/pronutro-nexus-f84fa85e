@@ -29,7 +29,7 @@ export function RevenueChart() {
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
 
       if (groups[key]) {
-        if (t.type === "entrada") groups[key].entradas += (t.valueIn || 0);
+        if ((t.type as string) === "entrada") groups[key].entradas += (t.valueIn || 0);
         else groups[key].saidas += (t.valueOut || 0);
       }
     });

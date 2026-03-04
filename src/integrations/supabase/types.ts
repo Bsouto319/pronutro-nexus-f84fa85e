@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          created_at: string
+          date: string
+          doctor_name: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          patient_name: string
+          source: string | null
+          status: string
+          time: string | null
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          doctor_name?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          patient_name: string
+          source?: string | null
+          status?: string
+          time?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          doctor_name?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          patient_name?: string
+          source?: string | null
+          status?: string
+          time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           created_at: string
@@ -190,6 +237,91 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "financial_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gastos: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data_gasto: string | null
+          descricao: string
+          fornecedor: string | null
+          id: string
+          metodo_pagamento: string | null
+          organization_id: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data_gasto?: string | null
+          descricao?: string
+          fornecedor?: string | null
+          id?: string
+          metodo_pagamento?: string | null
+          organization_id: string
+          valor?: number
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data_gasto?: string | null
+          descricao?: string
+          fornecedor?: string | null
+          id?: string
+          metodo_pagamento?: string | null
+          organization_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gastos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          organization_id: string
+          phone: string | null
+          source: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          phone?: string | null
+          source?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          phone?: string | null
+          source?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"

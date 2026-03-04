@@ -10,21 +10,19 @@ export function ProceduresChart() {
     const counts: Record<string, number> = {};
     let total = 0;
 
-    transactions.forEach(t => {
-      if (t.type === "entrada" && t.category) {
-        counts[t.category] = (counts[t.category] || 0) + 1;
-        total++;
-      }
+    transactions.forEach((t) => {
+      const cat = t.category || "outros";
+      counts[cat] = (counts[cat] || 0) + 1;
+      total++;
     });
 
-    if (total === 0) return [
-      { name: "Sem dados", value: 100 }
-    ];
+    if (total === 0)
+      return [{ name: "Sem dados", value: 100 }];
 
     return Object.entries(counts)
       .map(([name, count]) => ({
         name,
-        value: Math.round((count / total) * 100)
+        value: Math.round((count / total) * 100),
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
@@ -37,6 +35,7 @@ export function ProceduresChart() {
     "hsl(32, 85%, 55%)",
     "hsl(350, 70%, 55%)",
   ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -44,22 +43,13 @@ export function ProceduresChart() {
       transition={{ delay: 0.45, duration: 0.5 }}
       className="glass rounded-xl p-6 card-shadow"
     >
-      <h3 className="font-display font-semibold text-foreground mb-1">Procedimentos</h3>
-      <p className="text-sm text-muted-foreground mb-4">Distribuição mensal</p>
+      <h3 className="font-display font-semibold text-foreground mb-1">Categorias de Gastos</h3>
+      <p className="text-sm text-muted-foreground mb-4">Distribuição por categoria</p>
 
       <div className="flex items-center gap-4">
         <ResponsiveContainer width={160} height={160}>
           <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              innerRadius={45}
-              outerRadius={70}
-              paddingAngle={3}
-              dataKey="value"
-              strokeWidth={0}
-            >
+            <Pie data={chartData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value" strokeWidth={0}>
               {chartData.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}

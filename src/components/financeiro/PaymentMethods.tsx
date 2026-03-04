@@ -18,7 +18,7 @@ export function PaymentMethods() {
     const methods = ["Pix", "Cartão", "Dinheiro", "Boleto", "Transferência"];
     const results = methods.map(method => {
       const total = transactions
-        .filter(t => t.paymentMethod?.toLowerCase().includes(method.toLowerCase()) && t.type === "entrada")
+        .filter(t => t.paymentMethod?.toLowerCase().includes(method.toLowerCase()) && (t.type as string) === "entrada")
         .reduce((sum, t) => sum + (t.valueIn || 0), 0);
       return { name: method, total };
     }).filter(m => m.total > 0);
