@@ -26,7 +26,7 @@ export function FinanceCharts() {
     return doctors.map(d => ({
       name: d.name,
       value: transactions
-        .filter(t => t.doctor === d.name && t.type === "entrada" && t.source === "transaction")
+        .filter(t => t.doctor === d.name && (t.type as string) === "entrada" && (t.source as string) === "transaction")
         .reduce((sum, t) => sum + (t.valueIn || 0), 0)
     })).sort((a, b) => b.value - a.value);
   }, [doctors, transactions]);
@@ -36,7 +36,7 @@ export function FinanceCharts() {
     return methods.map(method => ({
       name: method,
       total: transactions
-        .filter(t => t.paymentMethod?.toLowerCase().includes(method.toLowerCase()) && t.type === "entrada")
+        .filter(t => t.paymentMethod?.toLowerCase().includes(method.toLowerCase()) && (t.type as string) === "entrada")
         .reduce((sum, t) => sum + (t.valueIn || 0), 0)
     })).filter(p => p.total > 0);
   }, [transactions]);

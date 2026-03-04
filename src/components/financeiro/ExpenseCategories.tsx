@@ -1,17 +1,9 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { formatCurrency } from "./financeData";
-import { useFinanceData } from "@/hooks/useFinanceData";
+import { useFinanceData, GastoRow } from "@/hooks/useFinanceData";
 
-interface Gasto {
-  id: string;
-  descricao: string;
-  valor: number;
-  categoria: string;
-  fornecedor: string;
-}
-
-function ExpenseCard({ title, emoji, items }: { title: string; emoji: string; items: Gasto[] }) {
+function ExpenseCard({ title, emoji, items }: { title: string; emoji: string; items: GastoRow[] }) {
   const total = items.reduce((acc, i) => acc + (i.valor || 0), 0);
 
   return (
@@ -48,11 +40,11 @@ export function ExpenseCategories() {
 
   const sections = useMemo(() => {
     return [
-      { title: "Débitos", emoji: "💸", items: gastos.filter(g => g.categoria === "Débitos") },
-      { title: "Impostos", emoji: "📋", items: gastos.filter(g => g.categoria === "Impostos") },
-      { title: "Repasses", emoji: "🔄", items: gastos.filter(g => g.categoria === "Repasses") },
-      { title: "Despesas Fixas", emoji: "📌", items: gastos.filter(g => g.categoria === "Fixas") },
-      { title: "Despesas Variáveis", emoji: "📦", items: gastos.filter(g => g.categoria === "Variáveis") },
+      { title: "Débitos", emoji: "💸", items: gastos.filter((g) => g.categoria === "Débitos") },
+      { title: "Impostos", emoji: "📋", items: gastos.filter((g) => g.categoria === "Impostos") },
+      { title: "Repasses", emoji: "🔄", items: gastos.filter((g) => g.categoria === "Repasses") },
+      { title: "Despesas Fixas", emoji: "📌", items: gastos.filter((g) => g.categoria === "Fixas") },
+      { title: "Despesas Variáveis", emoji: "📦", items: gastos.filter((g) => g.categoria === "Variáveis") },
     ];
   }, [gastos]);
 
