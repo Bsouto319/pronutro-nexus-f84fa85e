@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo } from "react";
-
-const DEFAULT_ORG_ID = "65777d18-1126-481d-93d9-169237388d7f";
+import { useOrganization } from "@/hooks/useOrganization";
 
 export interface GastoRow {
   id: string;
@@ -17,13 +16,16 @@ export interface GastoRow {
 }
 
 export function useFinanceData() {
+  const { organizationId } = useOrganization();
+
   const gastosQuery = useQuery({
-    queryKey: ["gastos", DEFAULT_ORG_ID],
+    queryKey: ["gastos", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("gastos" as any)
+        .from("gastos")
         .select("*")
-        .eq("organization_id", DEFAULT_ORG_ID)
+        .eq("organization_id", organizationId!)
         .order("data_gasto", { ascending: false });
 
       if (error) {
@@ -35,11 +37,13 @@ export function useFinanceData() {
   });
 
   const doctorsQuery = useQuery({
-    queryKey: ["clinic_doctors"],
+    queryKey: ["clinic_doctors", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clinic_doctors")
-        .select("*");
+        .select("*")
+        .eq("organization_id", organizationId!);
       if (error) {
         console.warn("Error fetching doctors:", error.message);
         return [];
@@ -49,11 +53,13 @@ export function useFinanceData() {
   });
 
   const bankAccountsQuery = useQuery({
-    queryKey: ["bank_accounts"],
+    queryKey: ["bank_accounts", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_accounts")
-        .select("*");
+        .select("*")
+        .eq("organization_id", organizationId!);
       if (error) {
         console.warn("Error fetching bank accounts:", error.message);
         return [];
@@ -63,11 +69,13 @@ export function useFinanceData() {
   });
 
   const patientsQuery = useQuery({
-    queryKey: ["clinic_patients"],
+    queryKey: ["clinic_patients", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clinic_patients")
-        .select("*");
+        .select("*")
+        .eq("organization_id", organizationId!);
       if (error) {
         console.warn("Error fetching patients:", error.message);
         return [];
@@ -114,7 +122,7 @@ export function useFinanceData() {
   const isError = gastosQuery.isError || doctorsQuery.isError || bankAccountsQuery.isError || patientsQuery.isError;
 
   const totalSaidas = transactions.reduce((acc, t) => acc + (t.valueOut || 0), 0);
-  const totalEntradas = 0; // No income source yet
+  const totalEntradas = 0;
   const saldo = totalEntradas - totalSaidas;
 
   return {

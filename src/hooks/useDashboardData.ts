@@ -1,18 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const DEFAULT_ORG_ID = "65777d18-1126-481d-93d9-169237388d7f";
+import { useOrganization } from "@/hooks/useOrganization";
 
 export function useDashboardData() {
+  const { organizationId } = useOrganization();
   const today = new Date().toISOString().split("T")[0];
 
   const agendamentosHoje = useQuery({
-    queryKey: ["agendamentos_hoje", today],
+    queryKey: ["agendamentos_hoje", today, organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("agendamentos" as any)
+        .from("agendamentos")
         .select("*")
-        .eq("organization_id", DEFAULT_ORG_ID)
+        .eq("organization_id", organizationId!)
         .eq("date", today);
       if (error) { console.warn("agendamentos:", error.message); return []; }
       return data || [];
@@ -20,24 +21,26 @@ export function useDashboardData() {
   });
 
   const leadsCount = useQuery({
-    queryKey: ["leads_count"],
+    queryKey: ["leads_count", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("leads" as any)
+        .from("leads")
         .select("*", { count: "exact", head: true })
-        .eq("organization_id", DEFAULT_ORG_ID);
+        .eq("organization_id", organizationId!);
       if (error) { console.warn("leads:", error.message); return 0; }
       return count || 0;
     },
   });
 
   const gastosTotal = useQuery({
-    queryKey: ["gastos_total"],
+    queryKey: ["gastos_total", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("gastos" as any)
+        .from("gastos")
         .select("valor")
-        .eq("organization_id", DEFAULT_ORG_ID);
+        .eq("organization_id", organizationId!);
       if (error) { console.warn("gastos:", error.message); return 0; }
       return (data || []).reduce((acc: number, g: any) => acc + (g.valor || 0), 0);
     },
