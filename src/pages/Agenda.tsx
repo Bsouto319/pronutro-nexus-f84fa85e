@@ -1,15 +1,14 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const DEFAULT_ORG_ID = "65777d18-1126-481d-93d9-169237388d7f";
+import { useOrganization } from "@/hooks/useOrganization";
 
 const statusStyles: Record<string, string> = {
   confirmado: "bg-success/15 text-success border-success/30",
@@ -18,16 +17,18 @@ const statusStyles: Record<string, string> = {
 };
 
 const Agenda = () => {
+  const { organizationId } = useOrganization();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = selectedDate.toISOString().split("T")[0];
 
   const { data: agendamentos, isLoading, isError, refetch } = useQuery({
-    queryKey: ["agendamentos", dateStr],
+    queryKey: ["agendamentos", dateStr, organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("agendamentos" as any)
+        .from("agendamentos")
         .select("*")
-        .eq("organization_id", DEFAULT_ORG_ID)
+        .eq("organization_id", organizationId!)
         .eq("date", dateStr)
         .order("time", { ascending: true });
       if (error) { console.warn("agendamentos:", error.message); return []; }

@@ -5,18 +5,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useFinanceData } from "@/hooks/useFinanceData";
+import { useOrganization } from "@/hooks/useOrganization";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 export function AICapture() {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const { refetch } = useFinanceData();
+  const { organizationId } = useOrganization();
   const cameraRef = useRef<HTMLInputElement>(null);
   const uploadRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Tipo de arquivo não suportado", {
+        description: "Aceitos: JPEG, PNG, WebP ou PDF.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Arquivo muito grande", {
+        description: "O limite é 10 MB por arquivo.",
+      });
+      event.target.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result as string);
@@ -25,7 +46,7 @@ export function AICapture() {
   };
 
   const handleSend = async () => {
-    if (!pendingFile) return;
+    if (!pendingFile || !organizationId) return;
     setIsUploading(true);
     try {
       const base64 = await new Promise<string>((resolve) => {
@@ -43,7 +64,7 @@ export function AICapture() {
           source: "dashboard",
           messageType: pendingFile.type.includes("pdf") ? "document" : "image",
           senderName: "Usuário Dashboard",
-          organizationId: "65777d18-1126-481d-93d9-169237388d7f",
+          organizationId,
           fileURL: base64,
           messageid: `DASH_${Date.now()}`,
           content: "Upload via Dashboard",
@@ -110,7 +131,7 @@ export function AICapture() {
                   {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
                   Capturar Nota/Lista
                 </Button>
-                <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
+                <input ref={cameraRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={handleFileSelect} />
 
                 <Button
                   variant="outline"
@@ -121,7 +142,7 @@ export function AICapture() {
                   <FileUp className="w-4 h-4 mr-2" />
                   Upload (Imagem/PDF)
                 </Button>
-                <input ref={uploadRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileSelect} />
+                <input ref={uploadRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={handleFileSelect} />
 
                 {pendingFile && !isUploading && (
                   <div className="flex gap-2">
@@ -137,7 +158,7 @@ export function AICapture() {
               </div>
 
               <div className="text-[10px] text-muted-foreground bg-muted/30 p-2 rounded border border-border/20">
-                <p>💡 Fotos nítidas e bem iluminadas garantem 99.8% de precisão na extração.</p>
+                <p>💡 Fotos nítidas e bem iluminadas garantem 99.8% de precisão na extração. Máx 10 MB.</p>
               </div>
             </div>
 
