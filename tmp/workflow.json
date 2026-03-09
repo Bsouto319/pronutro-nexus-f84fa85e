@@ -1,0 +1,1533 @@
+{
+  "name": "SIMPLIFICADO-PRONUTRO",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🏗️ PRONUTRO — v7 CLEAN\n\n**FLUXO A — WhatsApp**\nWebhook → Normalizar → Válido?\n→ Switch (text | audio | image)\n  • text  → Processar Texto → Merge\n  • audio → Download UAZAPI → Transcrição → Processar Áudio → Merge\n  • image → Download UAZAPI → OCR GPT-4o → Processar OCR → OCR Válido? → Split Gastos → Supabase Gastos → Webhook Dashboard\n→ Merge → Anti-Spam → AI Agent Maria\n→ Preparar → Sanitizar → Enviar WA → Log\n\n**FLUXO B — Lembretes Cron 6h**\n\n✅ v7 FIXES:\n- Removido Handoff (Verificar + IF + Msg)\n- HTTP Request corrigido (body JSON válido)\n- Fluxo direto: Merge → Anti-Spam → Maria",
+        "height": 280,
+        "width": 480,
+        "color": 4
+      },
+      "id": "bccf2fed-68ea-4137-adcd-57ba07e9e900",
+      "name": "📋 Arquitetura",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pronutro-saas3",
+        "options": {}
+      },
+      "id": "df896426-2dd2-4d4c-9f60-f5bb7480edbe",
+      "name": "🌐 Webhook Principal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        592
+      ],
+      "webhookId": "pronutro-agent-v3-2026"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const data = $json.body || $json;\n  const msg = data.message || {};\n\n  if (msg.fromMe === true) {\n    return [{ json: { skip: true, reason: 'bot_message' } }];\n  }\n\n  let senderRaw = msg.sender_pn || msg.chatid || \"\";\n  let number = senderRaw.split('@')[0].replace(/\\D/g, '');\n\n  if (number.startsWith('167') || number.length > 13) {\n    return [{ json: { skip: true, reason: 'invalid_lid', id: number } }];\n  }\n\n  if (number.length >= 10 && number.length <= 11) {\n    number = '55' + number;\n  }\n\n  const rawType = (msg.type || msg.messageType || 'text').toLowerCase();\n  let mType = 'text';\n  if (rawType.includes('audio') || rawType === 'ptt') mType = 'audio';\n  if (rawType.includes('image')) mType = 'image';\n\n  return [{ json: {\n    skip: false,\n    number: number,\n    chatId: number + '@s.whatsapp.net',\n    senderName: (msg.senderName || data.chat?.name || 'CLIENTE').toUpperCase(),\n    messageType: mType,\n    messageContent: (msg.text || msg.content || '').trim(),\n    messageId: msg.messageid || msg.id\n  }}];\n\n} catch(err) {\n  return [{ json: { skip: true, reason: 'error', error: err.message } }];\n}"
+      },
+      "id": "d4444fb6-f03b-47b3-8c10-5b05e16469e8",
+      "name": "🔄 Normalizar Entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        592
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "no-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "915f46b1-0cb9-420b-be7f-0d2f701ecb16",
+      "name": "✅ Válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8f71c075-618d-49c1-bc49-d8870bee7af7",
+      "name": "🔀 Tipo de Mensagem",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "content",
+              "value": "={{ $json.messageContent }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "timestamp",
+              "value": "={{ $json.messageTimestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "chatId",
+              "value": "={{ $json.chatId }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "senderName",
+              "value": "={{ $json.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "number",
+              "value": "={{ $json.number }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "messageType",
+              "value": "=text",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "messageId",
+              "value": "={{ $json.messageId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "54839cdb-22ff-4626-85d6-2f1ceae2e2d9",
+      "name": "📄 Processar Texto",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://btechsoutoshop.uazapi.com/message/download",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $json.messageId }}\",\n  \"transcribe\": true,\n  \"return_link\": true\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "4068d427-a038-4b4f-abd1-e4fe511d2b75",
+      "name": "⬇️ Download Áudio UAZAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        592
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OCe0gA9RUcVdGxqb",
+          "name": "HEATHER-OPENAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\nconst transcription = response.transcription || response.text || response.transcript || '[Áudio não transcrito]';\nreturn [{ json: { text: transcription, transcription } }];"
+      },
+      "id": "571a4539-9cfd-4324-bb72-2d67ebf31b3a",
+      "name": "🎙️ Processar Transcrição",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "content",
+              "value": "=[ÁUDIO]: {{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "chatId",
+              "value": "={{ $('🔄 Normalizar Entrada').item.json.chatId }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "senderName",
+              "value": "={{ $('🔄 Normalizar Entrada').item.json.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "number",
+              "value": "={{ $('🔄 Normalizar Entrada').item.json.number }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "messageType",
+              "value": "=audio",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6077070b-f2ab-4dd5-bbe7-32b56e8d6daa",
+      "name": "🎧 Processar Áudio",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "id": "ea454e26-a4fe-4d09-914d-79f0412554f3",
+      "name": "🔗 Merge Mensagens",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1568,
+        496
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "4f96e60d-480c-4e92-a793-54e0ac9b39f1",
+      "name": "⏱️ Anti-Spam",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        496
+      ],
+      "webhookId": "antispam-v7-2026"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('🔗 Merge Mensagens').first().json.content }}",
+        "options": {
+          "systemMessage": "=Você é Maria, assistente virtual da Clínica ProNutro. Sua comunicação é ágil, humana, empática e focada em conversão (agendamento). Você deve ser prestativa, mas direta, conduzindo o usuário até a confirmação da consulta.\n\nCONTEXTO E VALORES (TABELA 2026)\nDr. Augusto Margon (Nutrólogo, Psiquiatra e Intensivista): R$ 930. Diferencial: Tratamento 360º (nutrologia, psiquiatria e hormonal).\n\nDr. Celso Melo (Nutrólogo e Cirurgião Proctologista): R$ 650.\n\nDr. Marcus Gesteira (Emagrecimento): R$ 560. (Atende convênios).\n\nDra. Vanessa Melo (Pediatra e Nutrologia): R$ 560. (Atende convênios).\n\nDra. Kelly Felippes (Saúde e Fertilidade da Mulher): R$ 500.\n\nGisele Falcão (Enfermeira Esteta): R$ 200 (Avaliação).\n\nREGRAS DE EXECUÇÃO (CRÍTICO)\nIdentificação: Se o usuário mencionar um médico ou intenção de agendar, execute get_all_events no calendário Pronutro-2026.\n\nConflitos: Se o horário estiver ocupado, analise o retorno da tool e sugira os próximos 3 horários livres de forma amigável.\n\nConfirmação Verbal: Só execute create_event após o \"Sim\", \"Pode marcar\" ou \"Ok\" do usuário.\n\nFormato de Data: Envie para as ferramentas sempre como YYYY-MM-DD HH:MM:SS.\n\nData de Referência (Hoje): {{ $now }}.\n\nDuração Padrão: 1 hora.\n\nMemória: Se o nome ou telefone já foram ditos no histórico, é proibido perguntar de novo. Apenas confirme-os no passo final.\n\nFLUXO DA RESPOSTA (PASSO A PASSO)\nPasso 1: Saudação e ajuda na escolha do médico/especialidade.\n\nPasso 2: Verificação de disponibilidade (Tool).\n\nPasso 3: Coleta de dados faltantes (Nome completo e Telefone com DDD).\n\nPasso 4: Resumo: \"Confirma [Médico] dia [Data] às [Hora] para o paciente [Nome]?\"\n\nPasso 5 (Pós-Agendamento): Assim que a tool create_event retornar sucesso, use obrigatoriamente o modelo abaixo.\n\nMODELO DE CONFIRMAÇÃO FINAL (OBRIGATÓRIO)\n\"Consulta confirmada! 🎉\n\n[Nome do Médico] te aguarda no dia [Dia da Semana], [DD/MM] de 2026, às [HH:MM]. O valor é R$ [Preço conforme tabela].\n\nAqui estão os detalhes:\n\n⚕️ CLÍNICA PRONUTRO ⚕️\n🏥 CENTRO CLÍNICO LINEA VITTA\nQuadra 616 SGA/SUL, Bloco C, Sala 223 - Asa Sul - Brasília/DF\n📲 (61) 99954-8881 / 99697-0078\n📍 Localização: https://maps.app.goo.gl/0 (Estacionamento no local)\n\nSe precisar de algo mais, estou à disposição! 😊\"\n\nRESTRIÇÕES\nNUNCA responda em formato JSON.\n\nNUNCA use blocos de código (markdown de código).\n\nNÃO invente médicos ou preços fora da tabela.\n\nSe o assunto fugir de agendamento, responda brevemente e puxe o assunto de volta para a consulta."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2272,
+        384
+      ],
+      "id": "2279cd66-0f79-4cd2-97b8-b9ea004e9299",
+      "name": "🤖 AI Agent Maria",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 800,
+          "temperature": 0.2
+        }
+      },
+      "id": "aa7f1878-8248-4d12-b4ff-27a973db95b4",
+      "name": "🧠 GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2016,
+        608
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "npMh3VS7G5iUPrTO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('🔗 Merge Mensagens').first().json.chatId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2144,
+        608
+      ],
+      "id": "1e98f1b8-b1a7-4baf-a28b-1453d66c5060",
+      "name": "💾 Memória"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "OBRIGATÓRIO: Busca eventos no Google Calendar. Use SEMPRE antes de qualquer afirmação sobre disponibilidade.",
+        "calendar": {
+          "__rl": true,
+          "value": "61146ad5f457e8f0ab30f24def227bf02a29ee6889e3bb8df166f34e6d969e67@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Pronutro-2026"
+        },
+        "additionalFields": {}
+      },
+      "id": "3fee547c-39e3-4643-b671-b43bb4e78176",
+      "name": "🔍 Tool: Buscar Eventos",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2272,
+        608
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "D7dKObgPZ26QbuJD",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Cria consulta. Use SOMENTE após disponibilidade confirmada + dados completos + paciente confirmar.",
+        "calendar": {
+          "__rl": true,
+          "value": "61146ad5f457e8f0ab30f24def227bf02a29ee6889e3bb8df166f34e6d969e67@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Pronutro-2026"
+        },
+        "start": "={{ $fromAI('start', 'Início YYYY-MM-DD HH:MM:SS', 'string') }}",
+        "end": "={{ $fromAI('end', 'Fim YYYY-MM-DD HH:MM:SS', 'string') }}",
+        "additionalFields": {
+          "description": "=Paciente: {{ $fromAI('pac_nome_completo', 'Nome completo', 'string') }}\nTel: {{ $fromAI('pac_telefone', 'Telefone', 'string') }}\nValor: R$ {{ $fromAI('consulta_valor', 'Valor', 'number') }}\nOrigem: WhatsApp\nClínica ProNutro",
+          "summary": "=Consulta - {{ $fromAI('prof_nome', 'Profissional', 'string') }} | {{ $fromAI('pac_nome', 'Paciente', 'string') }}"
+        }
+      },
+      "id": "ca29a5cc-e0b3-401d-931c-5ddc52cdf8cc",
+      "name": "➕ Tool: Criar Agendamento",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        608
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "D7dKObgPZ26QbuJD",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Cancela consulta pelo ID do evento.",
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "61146ad5f457e8f0ab30f24def227bf02a29ee6889e3bb8df166f34e6d969e67@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Pronutro-2026"
+        },
+        "eventId": "={{ $fromAI('eventId', 'ID do evento', 'string') }}",
+        "options": {
+          "sendUpdates": "all"
+        }
+      },
+      "id": "a71b1598-2e97-4430-9430-5a619729c905",
+      "name": "❌ Tool: Cancelar Agendamento",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2528,
+        608
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "D7dKObgPZ26QbuJD",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Salva agendamento no Supabase dashboard. Chame APÓS criar_agendamento ter sucesso.",
+        "tableId": "agendamentos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "chat_id",
+              "fieldValue": "={{ $('🔗 Merge Mensagens').first().json.chatId }}"
+            },
+            {
+              "fieldId": "paciente_nome",
+              "fieldValue": "={{ $fromAI('paciente_nome', 'Nome do paciente', 'string') }}"
+            },
+            {
+              "fieldId": "paciente_telefone",
+              "fieldValue": "={{ $fromAI('paciente_telefone', 'Telefone', 'string') }}"
+            },
+            {
+              "fieldId": "profissional",
+              "fieldValue": "={{ $fromAI('profissional', 'Profissional', 'string') }}"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $fromAI('valor', 'Valor', 'number') }}"
+            },
+            {
+              "fieldId": "data_inicio",
+              "fieldValue": "={{ $fromAI('data_inicio', 'Início ISO', 'string') }}"
+            },
+            {
+              "fieldId": "data_fim",
+              "fieldValue": "={{ $fromAI('data_fim', 'Fim ISO', 'string') }}"
+            },
+            {
+              "fieldId": "google_event_id",
+              "fieldValue": "={{ $fromAI('google_event_id', 'ID evento', 'string') }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "confirmado"
+            },
+            {
+              "fieldId": "reminder_sent",
+              "fieldValue": false
+            }
+          ]
+        }
+      },
+      "id": "d82abf94-5259-409f-86ad-8f2733a71401",
+      "name": "💾 Tool: Salvar Dashboard",
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        2656,
+        608
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Q35UkhAZnm2oTDkh",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $json.output || $json.text || '';\nconst origin = $('🔗 Merge Mensagens').first().json;\nconst text = aiOutput || 'Desculpe, dificuldade técnica! 😔 Para agendar: 📞 (61) 99954-8881';\nreturn [{ json: { number: origin.number, chatId: origin.chatId, text, senderName: origin.senderName } }];"
+      },
+      "id": "b1d8892f-30a9-4bb2-a241-eb703c529129",
+      "name": "📦 Preparar Resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.text || '';\ntext = text.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g, '$1: $2');\ntext = text.replace(/\\*\\*([^*]+)\\*\\*/g, '$1');\ntext = text.replace(/\\*([^*]+)\\*/g, '$1');\ntext = text.replace(/```[a-z]*\\n?/g, '');\ntext = text.replace(/`([^`]+)`/g, '$1');\nreturn [{ json: { number: $json.number, chatId: $json.chatId, text: text.trim() } }];"
+      },
+      "id": "247756e0-35e2-4945-89a8-d6633e450db4",
+      "name": "🧹 Sanitizar Markdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3088,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://btechsoutoshop.uazapi.com/send/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.number, \"text\": $json.text, \"linkPreview\": false } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "409a2b43-0eb0-4096-bebb-5e58996020d5",
+      "name": "📤 Enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3312,
+        496
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FjhDIuaqCUqik7q",
+          "name": "Header Auth UAZAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "interactions",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "chat_id",
+              "fieldValue": "={{ $('🔗 Merge Mensagens').first().json.chatId }}"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "ai_response"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.text }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "07826ec8-35e6-4e2f-b614-d189e8b67b02",
+      "name": "📝 Log Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3536,
+        496
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Q35UkhAZnm2oTDkh",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://btechsoutoshop.uazapi.com/message/download",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $json.messageId }}\",\n  \"return_base64\": false,\n  \"return_link\": true\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a8dccafa-7c7a-4ae1-924f-f7262edef2d8",
+      "name": "⬇️ Download Imagem UAZAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        928
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FjhDIuaqCUqik7q",
+          "name": "Header Auth UAZAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o\",\n  \"max_tokens\": 1500,\n  \"temperature\": 0.1,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Especialista em contabilidade brasileira. Analise a imagem e retorne APENAS JSON. Categorias: Débitos, Impostos, Repasses, Fixas, Variáveis. Se não conseguir ler retorne {\\\"gastos\\\":[], \\\"confianca\\\":\\\"baixa\\\"}\" },\n    { \"role\": \"user\", \"content\": [ { \"type\": \"text\", \"text\": \"Extraia dados financeiros. JSON:\\n{\\\"documento_tipo\\\":\\\"...\\\",\\\"data_documento\\\":\\\"YYYY-MM-DD\\\",\\\"descricao_geral\\\":\\\"...\\\",\\\"gastos\\\":[{\\\"descricao\\\":\\\"...\\\",\\\"valor\\\":0.00,\\\"data\\\":\\\"YYYY-MM-DD\\\",\\\"categoria\\\":\\\"Débitos|Impostos|Repasses|Fixas|Variáveis\\\",\\\"metodo_pagamento\\\":\\\"pix|cartao_credito|cartao_debito|dinheiro|boleto|transferencia|nao_identificado\\\",\\\"fornecedor\\\":\\\"...\\\",\\\"numero_documento\\\":\\\"...\\\"}],\\\"total\\\":0.00,\\\"confianca\\\":\\\"alta|media|baixa\\\"}\" }, { \"type\": \"image_url\", \"image_url\": { \"url\": \"{{ $json.fileURL || $json.url || $json.link || '' }}\", \"detail\": \"high\" } } ] } ] }",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "1617d007-a575-405e-a8c5-98b99f2a4c3a",
+      "name": "👁️ OCR Vision GPT-4o",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1120,
+        928
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OCe0gA9RUcVdGxqb",
+          "name": "HEATHER-OPENAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const raw = $json.choices?.[0]?.message?.content || '{}';\n  let ocrData;\n  try { ocrData = JSON.parse(raw); } catch(e) { const m = raw.match(/\\{[\\s\\S]*\\}/); ocrData = m ? JSON.parse(m[0]) : {}; }\n  const norm = $('🔄 Normalizar Entrada').first().json;\n  const hoje = new Date().toISOString().split('T')[0];\n  const gastos = (ocrData.gastos || []).map(g => ({\n    organization_id: norm.organizationId || 'default_tenant',\n    descricao: g.descricao || 'Item',\n    valor: parseFloat(String(g.valor||0).replace(',','.')) || 0,\n    data_gasto: (g.data||hoje).match(/\\d{4}-\\d{2}-\\d{2}/)?.[0] || hoje,\n    categoria: g.categoria || 'Variáveis',\n    metodo_pagamento: g.metodo_pagamento || 'nao_identificado',\n    fornecedor: g.fornecedor || '',\n    numero_documento: g.numero_documento || '',\n    documento_tipo: ocrData.documento_tipo || 'outro',\n    confianca_ocr: ocrData.confianca || 'baixa',\n    source_type: 'whatsapp_ocr',\n    created_at: new Date().toISOString()\n  }));\n  return [{ json: { sucesso: gastos.length > 0, gastos, totalGastos: gastos.length, totalValor: gastos.reduce((s,g)=>s+g.valor,0), organizationId: norm.organizationId||'default_tenant', senderNumber: norm.number, confianca: ocrData.confianca||'baixa' } }];\n} catch(err) {\n  const norm = $('🔄 Normalizar Entrada').first().json;\n  return [{ json: { sucesso: false, gastos: [], totalGastos: 0, organizationId: norm.organizationId, senderNumber: norm.number, erro: err.message } }];\n}"
+      },
+      "id": "fbb2105c-8ba8-4a23-9484-794bf67ebff8",
+      "name": "⚙️ Processar OCR",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-g",
+              "leftValue": "={{ $json.totalGastos }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "sucesso",
+              "leftValue": "={{ $json.sucesso }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "970fc488-4881-44de-8020-d06a290b8d28",
+      "name": "✅ OCR Válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nreturn data.gastos.map(g => ({ json: { ...g, _meta: { senderNumber: data.senderNumber, organizationId: data.organizationId } } }));"
+      },
+      "id": "78d1103d-fa50-4119-9641-6b31224dd6e1",
+      "name": "✂️ Split Gastos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "gastos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $json.organization_id }}"
+            },
+            {
+              "fieldId": "descricao",
+              "fieldValue": "={{ $json.descricao }}"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $json.valor }}"
+            },
+            {
+              "fieldId": "data_gasto",
+              "fieldValue": "={{ $json.data_gasto }}"
+            },
+            {
+              "fieldId": "categoria",
+              "fieldValue": "={{ $json.categoria }}"
+            },
+            {
+              "fieldId": "metodo_pagamento",
+              "fieldValue": "={{ $json.metodo_pagamento }}"
+            },
+            {
+              "fieldId": "fornecedor",
+              "fieldValue": "={{ $json.fornecedor }}"
+            },
+            {
+              "fieldId": "numero_documento",
+              "fieldValue": "={{ $json.numero_documento }}"
+            },
+            {
+              "fieldId": "documento_tipo",
+              "fieldValue": "={{ $json.documento_tipo }}"
+            },
+            {
+              "fieldId": "confianca_ocr",
+              "fieldValue": "={{ $json.confianca_ocr }}"
+            },
+            {
+              "fieldId": "source_type",
+              "fieldValue": "={{ $json.source_type }}"
+            }
+          ]
+        }
+      },
+      "id": "94a79a60-64e6-4823-8109-4aa1ea950149",
+      "name": "💾 Supabase: Gastos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        832
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Q35UkhAZnm2oTDkh",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "gastos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "organization_id",
+              "fieldValue": "={{ $json.organizationId }}"
+            },
+            {
+              "fieldId": "descricao",
+              "fieldValue": "OCR_FALHOU"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "=0"
+            },
+            {
+              "fieldId": "data_gasto",
+              "fieldValue": "={{ $now.toISO().split('T')[0] }}"
+            },
+            {
+              "fieldId": "categoria",
+              "fieldValue": "Variáveis"
+            },
+            {
+              "fieldId": "documento_tipo",
+              "fieldValue": "erro_ocr"
+            },
+            {
+              "fieldId": "confianca_ocr",
+              "fieldValue": "falha"
+            },
+            {
+              "fieldId": "source_type",
+              "fieldValue": "ocr_erro"
+            }
+          ]
+        }
+      },
+      "id": "a3d805d0-ef79-4637-81e3-6b1dc0ecb163",
+      "name": "📝 Log Erro OCR",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        1024
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Q35UkhAZnm2oTDkh",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://eaxmzueqvgtiajiqcfcn.supabase.co/functions/v1/webhook-agendamento",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "BearereyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvcGRmYnNuZGlqZWhkcW93Zm1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMjc5NjgsImV4cCI6MjA3NzYwMzk2OH0.5aoRsDS-WFeemjqnESeTyjvdt03abNsUyO-HJdgj3FE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ patient_name: $('🔗 Merge Mensagens').first().json.senderName, doctor_name: 'ProNutro', date: $now.toFormat('yyyy-MM-dd'), time: $now.toFormat('HH:mm'), status: 'confirmado', source: 'whatsapp', organization_id: '65777d18-1126-481d-93d9-169237388d7f' }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "7a010a70-cd17-4928-96ce-7e4111a5a21a",
+      "name": "📊 Webhook Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2304,
+        832
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FjhDIuaqCUqik7q",
+          "name": "Header Auth UAZAPI"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "14fb07b2-f9e1-48cb-a5d1-2e9b12836da0",
+      "name": "⏰ Cron Lembretes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agendamentos",
+        "filterType": "string",
+        "filterString": "status=eq.confirmado&reminder_sent=eq.false&data_inicio=gte.{{ $now.toISO() }}&data_inicio=lte.{{ $now.plus({hours:28}).toISO() }}"
+      },
+      "id": "6a488088-239f-4f69-a70c-289e7a3099ae",
+      "name": "📅 Buscar Consultas",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        1248
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Q35UkhAZnm2oTDkh",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date();\nconst lembretes = [];\nfor (const item of items) {\n  const appt = item.json;\n  if (!appt?.data_inicio) continue;\n  const eventStart = new Date(appt.data_inicio);\n  const hoursUntil = (eventStart - now) / (1000*60*60);\n  if (hoursUntil >= 20 && hoursUntil <= 28) {\n    lembretes.push({json:{apptId:appt.id,number:appt.paciente_telefone,patientName:appt.paciente_nome,doctorName:appt.profissional,eventDate:eventStart.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}),eventTime:eventStart.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}});\n  }\n}\nif (!lembretes.length) return [{json:{status:'no_reminders'}}];\nreturn lembretes;"
+      },
+      "id": "f2ae1953-ef42-40f2-993f-2ce10f75ba1c",
+      "name": "🔍 Filtrar Lembretes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1248
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-rem",
+              "leftValue": "={{ $json.number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d849fc27-58b3-4abd-87ec-a75bc31a7249",
+      "name": "✅ Tem Lembrete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$json;\nconst msg=`Olá, ${d.patientName}! 👋\\n\\nAqui é a Maria, da Clínica ProNutro.\\n\\n📅 LEMBRETE:\\n\\nData: ${d.eventDate}\\nHorário: ${d.eventTime}\\nProfissional: ${d.doctorName}\\n\\n📍 Centro Clínico Linea Vitta\\nQuadra 616 SGA/Sul, Bloco C, Sala 223 - Asa Sul\\n\\n❓ Precisa remarcar?\\n📞 (61) 99954-8881\\n\\nAté logo! 🏥`;\nreturn [{json:{number:d.number,text:msg,apptId:d.apptId}}];"
+      },
+      "id": "38449be3-0106-4405-9095-c106c65dc4b5",
+      "name": "✍️ Gerar Lembrete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://btechsoutoshop.uazapi.com/send/text",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "066d2ebd-dca0-4b92-a9d4-f2b2e1506584"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.number, \"text\": $json.text, \"linkPreview\": false } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "b2ec199a-06d5-4074-bf48-9108de3852c3",
+      "name": "📨 Enviar Lembrete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1120,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "agendamentos",
+        "filterType": "string",
+        "filterString": "id=eq.{{ $json.apptId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "reminder_sent",
+              "fieldValue": true
+            },
+            {
+              "fieldId": "reminder_sent_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "996a59ef-8f17-4ff5-8b19-507bcd00067e",
+      "name": "✔️ Marcar Enviado",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1248
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Q35UkhAZnm2oTDkh",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "🌐 Webhook Principal": {
+      "main": [
+        [
+          {
+            "node": "🔄 Normalizar Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔄 Normalizar Entrada": {
+      "main": [
+        [
+          {
+            "node": "✅ Válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Válido?": {
+      "main": [
+        [
+          {
+            "node": "🔀 Tipo de Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Tipo de Mensagem": {
+      "main": [
+        [
+          {
+            "node": "📄 Processar Texto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⬇️ Download Áudio UAZAPI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⬇️ Download Imagem UAZAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📄 Processar Texto": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⬇️ Download Áudio UAZAPI": {
+      "main": [
+        [
+          {
+            "node": "🎙️ Processar Transcrição",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎙️ Processar Transcrição": {
+      "main": [
+        [
+          {
+            "node": "🎧 Processar Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎧 Processar Áudio": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Mensagens",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Mensagens": {
+      "main": [
+        [
+          {
+            "node": "⏱️ Anti-Spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏱️ Anti-Spam": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI Agent Maria": {
+      "main": [
+        [
+          {
+            "node": "📦 Preparar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 GPT-4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Memória": {
+      "ai_memory": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Tool: Buscar Eventos": {
+      "ai_tool": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "➕ Tool: Criar Agendamento": {
+      "ai_tool": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Tool: Cancelar Agendamento": {
+      "ai_tool": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Tool: Salvar Dashboard": {
+      "ai_tool": [
+        [
+          {
+            "node": "🤖 AI Agent Maria",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📦 Preparar Resposta": {
+      "main": [
+        [
+          {
+            "node": "🧹 Sanitizar Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧹 Sanitizar Markdown": {
+      "main": [
+        [
+          {
+            "node": "📤 Enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📤 Enviar WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⬇️ Download Imagem UAZAPI": {
+      "main": [
+        [
+          {
+            "node": "👁️ OCR Vision GPT-4o",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "👁️ OCR Vision GPT-4o": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Processar OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Processar OCR": {
+      "main": [
+        [
+          {
+            "node": "✅ OCR Válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ OCR Válido?": {
+      "main": [
+        [
+          {
+            "node": "✂️ Split Gastos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📝 Log Erro OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✂️ Split Gastos": {
+      "main": [
+        [
+          {
+            "node": "💾 Supabase: Gastos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Supabase: Gastos": {
+      "main": [
+        [
+          {
+            "node": "📊 Webhook Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏰ Cron Lembretes": {
+      "main": [
+        [
+          {
+            "node": "📅 Buscar Consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📅 Buscar Consultas": {
+      "main": [
+        [
+          {
+            "node": "🔍 Filtrar Lembretes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Filtrar Lembretes": {
+      "main": [
+        [
+          {
+            "node": "✅ Tem Lembrete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Tem Lembrete?": {
+      "main": [
+        [
+          {
+            "node": "✍️ Gerar Lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✍️ Gerar Lembrete": {
+      "main": [
+        [
+          {
+            "node": "📨 Enviar Lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📨 Enviar Lembrete": {
+      "main": [
+        [
+          {
+            "node": "✔️ Marcar Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "677031da-5deb-421f-a877-056cba7c4b95",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fb696680d87829eb8e877421700d2be453dc1c21cbde79f07ed3f0e89764f967"
+  },
+  "id": "mcp4hvRPgARuU3qp",
+  "tags": []
+}
