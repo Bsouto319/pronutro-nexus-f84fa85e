@@ -1,1 +1,4 @@
 project_id = "eaxmzueqvgtiajiqcfcn"
+
+[functions.webhook-agendamento]
+verify_jwt = false
