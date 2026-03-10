@@ -19,11 +19,11 @@ export function useFinanceData() {
   const { organizationId } = useOrganization();
 
   const transactionsQuery = useQuery({
-    queryKey: ["clinic_transactions", organizationId],
+    queryKey: ["financial_transactions", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("clinic_transactions")
+        .from("financial_transactions")
         .select("*")
         .eq("organization_id", organizationId!)
         .order("date", { ascending: false });
