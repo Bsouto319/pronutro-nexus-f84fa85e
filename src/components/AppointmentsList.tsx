@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Clock, User, RefreshCw, AlertCircle, Trash2 } from "lucide-react";
+import { Clock, User, RefreshCw, AlertCircle, Trash2, CalendarDays } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface Appointment {
   id: string | number;
@@ -28,6 +29,7 @@ export function AppointmentsList() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { organizationId } = useOrganization();
 
   const fetchAppointments = async () => {
     const webhookUrl = localStorage.getItem("nexus_n8n_webhook_url");
@@ -41,23 +43,31 @@ export function AppointmentsList() {
     setError(false);
 
     try {
+      // Chamada ao n8n para buscar os agendamentos reais
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'get_appointments' }),
+        body: JSON.stringify({
+          action: 'get_appointments',
+          organizationId: organizationId
+        }),
       });
 
-      if (!response.ok) throw new Error('Falha ao buscar agenda');
+      if (!response.ok) throw new Error('Falha ao conectar com n8n');
 
       const data = await response.json();
       const items = Array.isArray(data) ? data : (data.appointments || []);
+
       setAppointments(items);
-      // Emit count to KPI card in Index.tsx (avoids duplicate webhook call)
-      window.dispatchEvent(new CustomEvent("appointments_count_updated", { detail: { count: items.length } }));
+
+      // Notifica o Dashboard do total para atualizar os KPIs
+      window.dispatchEvent(new CustomEvent("appointments_count_updated", {
+        detail: { count: items.length }
+      }));
     } catch (err) {
-      console.error("Erro ao buscar agenda do n8n:", err);
+      console.error("Erro ao sincronizar com n8n:", err);
       setError(true);
     } finally {
       setLoading(false);
@@ -66,11 +76,10 @@ export function AppointmentsList() {
 
   const handleDelete = async (e: React.MouseEvent, id: string | number) => {
     e.stopPropagation();
-
     const webhookUrl = localStorage.getItem("nexus_n8n_webhook_url");
     if (!webhookUrl) return;
 
-    if (!confirm("Tem certeza que deseja excluir este agendamento?")) return;
+    if (!confirm("Deseja excluir este agendamento no n8n e Google Calendar?")) return;
 
     try {
       const response = await fetch(webhookUrl, {
@@ -78,59 +87,57 @@ export function AppointmentsList() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'delete_appointment', appointmentId: id }),
+        body: JSON.stringify({
+          action: 'delete_appointment',
+          appointmentId: id,
+          organizationId: organizationId
+        }),
       });
 
       if (!response.ok) throw new Error('Falha ao excluir');
 
-      toast.success("Agendamento excluído com sucesso!");
-      fetchAppointments(); // Refresh list
+      toast.success("Agendamento removido com sucesso!");
+      fetchAppointments();
     } catch (err) {
-      toast.error("Ocorreu um erro ao excluir o agendamento.");
+      toast.error("Erro ao excluir agendamento.");
       console.error(err);
     }
   };
 
   useEffect(() => {
     fetchAppointments();
-
-    const handleUpdate = () => fetchAppointments();
-    window.addEventListener("n8n_url_updated", handleUpdate);
-    return () => window.removeEventListener("n8n_url_updated", handleUpdate);
-  }, []);
+    window.addEventListener("n8n_url_updated", fetchAppointments);
+    return () => window.removeEventListener("n8n_url_updated", fetchAppointments);
+  }, [organizationId]);
 
   if (loading && appointments.length === 0) {
     return (
-      <div className="glass rounded-xl p-8 flex flex-col items-center justify-center min-h-[300px] space-y-4">
+      <div className="glass rounded-xl p-8 flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-        <p className="text-sm text-muted-foreground animate-pulse">Sincronizando com n8n...</p>
+        <p className="text-sm text-muted-foreground animate-pulse">Sincronizando com Maria AI...</p>
       </div>
     );
   }
 
   if (error || !localStorage.getItem("nexus_n8n_webhook_url")) {
     const url = localStorage.getItem("nexus_n8n_webhook_url") || "";
-    const isTestUrl = url.includes("/webhook-test/");
-
     return (
-      <div className="glass rounded-xl p-8 flex flex-col items-center justify-center min-h-[300px] space-y-4 text-center">
+      <div className="glass rounded-xl p-8 flex flex-col items-center justify-center min-h-[400px] space-y-4 text-center">
         <AlertCircle className="w-10 h-10 text-warning" />
         <div>
-          <h3 className="font-display font-semibold text-foreground">Atenção!</h3>
-          <p className="text-sm text-muted-foreground mt-1 px-4">
+          <h3 className="font-display font-semibold text-foreground">Conexão Pendente</h3>
+          <p className="text-sm text-muted-foreground mt-2 px-6">
             {!url
-              ? "Configuração Necessária: Vá em Integrações e configure sua URL do n8n para ver a agenda real."
-              : isTestUrl
-                ? "Você está usando uma URL de TESTE. Certifique-se de que o workflow no n8n esteja em modo 'Executar' ou use a URL de PRODUÇÃO."
-                : "Não conseguimos conectar à sua URL do n8n. Verifique se o workflow está ativo e se a URL está correta."}
+              ? "Vá em 'Integrações' e configure a URL do seu workflow n8n para visualizar a agenda em tempo real."
+              : "Não foi possível conectar ao n8n. Verifique se o workflow está ativo ou se a URL está correta."}
           </p>
         </div>
         <button
           onClick={fetchAppointments}
-          className="text-xs font-bold uppercase text-primary hover:underline flex items-center gap-2"
+          className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition-all flex items-center gap-2"
         >
           <RefreshCw className="w-3 h-3" />
-          Tentar Novamente
+          Tentar Denovo
         </button>
       </div>
     );
@@ -140,27 +147,35 @@ export function AppointmentsList() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4, duration: 0.5 }}
-      className="glass rounded-xl p-6 card-shadow"
+      className="glass rounded-xl p-6 card-shadow h-full flex flex-col"
     >
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h3 className="font-display font-semibold text-foreground">Agenda de Hoje</h3>
-          <p className="text-sm text-muted-foreground">{appointments.length} agendamentos sincronizados</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <CalendarDays className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-display font-semibold text-foreground">Agenda Sincronizada</h3>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Monitoramento em tempo real</p>
+          </div>
         </div>
         <button
           onClick={fetchAppointments}
-          className="p-2 hover:bg-muted/50 rounded-lg transition-colors text-primary"
+          className="p-2 hover:bg-muted/50 rounded-lg transition-colors text-muted-foreground hover:text-primary"
           title="Sincronizar agora"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
         {appointments.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-sm text-muted-foreground">Nenhuma consulta agendada para hoje.</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted/20 flex items-center justify-center mb-3">
+              <Clock className="w-6 h-6 text-muted-foreground/40" />
+            </div>
+            <p className="text-sm text-muted-foreground">Sem consultas para hoje.</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">Maria está processando novos leads...</p>
           </div>
         ) : (
           appointments.map((apt, i) => (
@@ -168,28 +183,28 @@ export function AppointmentsList() {
               key={apt.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer"
+              transition={{ delay: i * 0.05 }}
+              className="flex items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/30 hover:border-primary/30 transition-all group"
             >
-              <div className="flex items-center gap-2 text-muted-foreground min-w-[60px]">
-                <Clock className="w-3.5 h-3.5" />
-                <span className="text-sm font-medium">{apt.time}</span>
+              <div className="flex flex-col items-center justify-center min-w-[50px] border-r border-border/50 pr-3">
+                <span className="text-xs font-bold text-primary">{apt.time}</span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-primary" />
-              </div>
+
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{apt.patient}</p>
-                <p className="text-xs text-muted-foreground truncate">{apt.doctor} · {apt.procedure}</p>
+                <p className="text-sm font-bold text-foreground truncate">{apt.patient}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <User className="w-3 h-3 text-muted-foreground" />
+                  <p className="text-[10px] text-muted-foreground truncate">{apt.doctor} · {apt.procedure}</p>
+                </div>
               </div>
+
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusStyles[apt.status] || "bg-muted text-muted-foreground"}`}>
+                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${statusStyles[apt.status] || "bg-muted text-muted-foreground"}`}>
                   {statusLabels[apt.status] || "Pendente"}
                 </span>
                 <button
                   onClick={(e) => handleDelete(e, apt.id)}
-                  className="p-1.5 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-md transition-all"
-                  title="Excluir agendamento"
+                  className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-md transition-all"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

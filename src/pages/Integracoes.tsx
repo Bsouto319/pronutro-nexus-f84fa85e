@@ -125,6 +125,28 @@ const Integracoes = () => {
                 <Save className="w-4 h-4 mr-2" />
                 Salvar URL
               </Button>
+              <Button
+                variant="outline"
+                className="glass whitespace-nowrap"
+                onClick={async () => {
+                  if (!n8nUrl) return toast.error("Insira a URL primeiro");
+                  toast.loading("Testando conexão...");
+                  try {
+                    const res = await fetch(n8nUrl, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'test', timestamp: Date.now() })
+                    });
+                    if (res.ok) toast.success("Conexão estabelecida com sucesso!");
+                    else toast.error("URL respondendo com erro: " + res.status);
+                  } catch (e) {
+                    toast.error("Erro ao conectar: Verifique se o n8n está online.");
+                  }
+                }}
+              >
+                <Zap className="w-4 h-4 mr-2 text-primary" />
+                Testar
+              </Button>
             </div>
             <p className="mt-4 text-[11px] text-muted-foreground">
               <span className="text-warning font-bold uppercase">Importante:</span> A IA de captura (faturas/recibos) só funcionará após salvar esta URL.
