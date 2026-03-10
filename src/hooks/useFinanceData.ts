@@ -19,11 +19,11 @@ export function useFinanceData() {
   const { organizationId } = useOrganization();
 
   const transactionsQuery = useQuery({
-    queryKey: ["clinic_transactions", organizationId],
+    queryKey: ["financial_transactions", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("clinic_transactions")
+        .from("financial_transactions")
         .select("*")
         .eq("organization_id", organizationId!)
         .order("date", { ascending: false });
@@ -131,6 +131,8 @@ export function useFinanceData() {
       valueIn: t.value_in || 0,
       valueOut: t.value_out || 0,
       type: t.type as "entrada" | "saida",
+      category: t.category || "outros",
+      fornecedor: null as string | null,
       source: "transaction" as const
     }));
 
@@ -138,13 +140,15 @@ export function useFinanceData() {
       id: g.id,
       date: formatDate(g.data_gasto || g.created_at || ""),
       description: g.descricao || "Gasto IA",
-      doctor: null,
-      patient: null,
+      doctor: null as string | null,
+      patient: null as string | null,
       paymentMethod: g.metodo_pagamento || "N/A",
       bank: "Geral",
       valueIn: 0,
       valueOut: g.valor || 0,
       type: "saida" as const,
+      category: g.categoria || "outros",
+      fornecedor: g.fornecedor || null,
       source: "gasto" as const
     }));
 
