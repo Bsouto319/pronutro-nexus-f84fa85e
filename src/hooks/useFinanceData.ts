@@ -131,6 +131,8 @@ export function useFinanceData() {
       valueIn: t.value_in || 0,
       valueOut: t.value_out || 0,
       type: t.type as "entrada" | "saida",
+      category: t.category || "outros",
+      fornecedor: null as string | null,
       source: "transaction" as const
     }));
 
