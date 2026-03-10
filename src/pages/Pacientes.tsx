@@ -1,15 +1,26 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
-import { Users, Search, Plus, Filter } from "lucide-react";
+import { Users, Search, Plus, Filter, Trash2, User, Phone, CreditCard } from "lucide-react";
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
 
 const Pacientes = () => {
   const { patients, doctors, isLoading } = useFinanceData();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -19,6 +30,69 @@ const Pacientes = () => {
     if (!doctorId) return "Não atribuído";
     const doctor = doctors.find(d => d.id === doctorId);
     return doctor ? doctor.name : "Não encontrado";
+  };
+
+  const handleAddPatient = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Você precisa estar logado.");
+      return;
+    }
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
+    const payment = formData.get("payment") as string;
+    const doctorId = formData.get("doctorId") as string;
+
+    try {
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!orgMember) throw new Error("Usuário não possui organização.");
+
+      const { error } = await supabase
+        .from("clinic_patients")
+        .insert([{
+          name,
+          payment_method: payment,
+          doctor_id: doctorId || null,
+          organization_id: orgMember.organization_id
+        }]);
+
+      if (error) throw error;
+
+      toast.success("Paciente cadastrado com sucesso!");
+      setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Erro ao cadastrar paciente: " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePatient = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir os dados deste paciente? Esta ação não pode ser desfeita.")) return;
+
+    try {
+      const { error } = await supabase
+        .from("clinic_patients")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Paciente removido com sucesso.");
+      queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
+    } catch (error: any) {
+      toast.error("Erro ao remover paciente: " + error.message);
+    }
   };
 
   return (
@@ -35,10 +109,76 @@ const Pacientes = () => {
               <p className="text-sm text-muted-foreground">{patients.length} pacientes cadastrados</p>
             </div>
           </div>
-          <Button className="gradient-primary">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Paciente
-          </Button>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Paciente
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="glass border-primary/20 sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-display font-bold">Cadastrar Novo Paciente</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados do paciente para registro na base de dados.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddPatient} className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="name">Nome Completo</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input id="name" name="name" placeholder="Nome do paciente" className="pl-10 glass" required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone / WhatsApp</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input id="phone" name="phone" placeholder="(00) 00000-0000" className="pl-10 glass" required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="payment">Método de Pagamento</Label>
+                    <div className="relative">
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                      <Select name="payment" defaultValue="Pix">
+                        <SelectTrigger className="pl-10 glass">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent className="glass">
+                          <SelectItem value="Pix">Pix</SelectItem>
+                          <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                          <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                          <SelectItem value="Convênio">Convênio</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="doctorId">Médico Responsável</Label>
+                    <Select name="doctorId">
+                      <SelectTrigger className="glass">
+                        <SelectValue placeholder="Selecione um médico" />
+                      </SelectTrigger>
+                      <SelectContent className="glass">
+                        {doctors.map(doc => (
+                          <SelectItem key={doc.id} value={doc.id}>{doc.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter className="pt-4">
+                  <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+                    {isSubmitting ? "Cadastrando..." : "Confirmar Cadastro"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 items-center mb-2">
@@ -85,7 +225,7 @@ const Pacientes = () => {
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.03 }}
-                      className="hover:bg-muted/20 transition-colors"
+                      className="hover:bg-muted/20 transition-colors group"
                     >
                       <td className="p-4 font-medium text-foreground">{patient.name}</td>
                       <td className="p-4 text-sm text-muted-foreground">{getDoctorName(patient.doctor_id)}</td>
@@ -98,7 +238,15 @@ const Pacientes = () => {
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(patient.total || 0)}
                       </td>
                       <td className="p-4 text-right">
-                        <button className="text-primary hover:text-primary/80 transition-colors text-sm font-medium">Ver Detalhes</button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button className="text-primary hover:text-primary/80 transition-colors text-xs font-medium">Ver</button>
+                          <button
+                            onClick={() => handleDeletePatient(patient.id)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-md hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </motion.tr>
                   ))

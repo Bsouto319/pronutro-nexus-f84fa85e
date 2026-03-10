@@ -1,13 +1,7 @@
 import { motion } from "framer-motion";
-
-const doctors = [
-  { name: "Dr. Augusto Margon", specialty: "Nutrólogo, Psiquiatra e Intensivista", patients: 124, rating: 5.0, avatar: "AM", price: "R$ 930" },
-  { name: "Dr. Celso Melo", specialty: "Nutrólogo e Cirurgião Proctologista", patients: 89, rating: 4.9, avatar: "CM", price: "R$ 650" },
-  { name: "Dr. Marcus Gesteira", specialty: "Emagrecimento (Atende Convênios)", patients: 156, rating: 4.8, avatar: "MG", price: "R$ 560" },
-  { name: "Dra. Vanessa Melo", specialty: "Pediatra e Nutrologia (Convênios)", patients: 142, rating: 4.9, avatar: "VM", price: "R$ 560" },
-  { name: "Dra. Kelly Felippes", specialty: "Saúde e Fertilidade da Mulher", patients: 95, rating: 4.9, avatar: "KF", price: "R$ 500" },
-  { name: "Gisele Falcão", specialty: "Enfermeira Esteta", patients: 78, rating: 4.8, avatar: "GF", price: "R$ 200 (Aval.)" },
-];
+import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useFinanceData } from "@/hooks/useFinanceData";
 
 const colors = [
   "from-primary to-info",
@@ -19,6 +13,17 @@ const colors = [
 ];
 
 export function DoctorsGrid() {
+  const navigate = useNavigate();
+  const { doctors, isLoading } = useFinanceData();
+
+  if (isLoading) {
+    return (
+      <div className="glass rounded-xl p-6 min-h-[300px] flex items-center justify-center">
+        <p className="text-muted-foreground animate-pulse">Carregando médicos...</p>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,33 +34,46 @@ export function DoctorsGrid() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="font-display font-semibold text-foreground">Equipe Médica</h3>
-          <p className="text-sm text-muted-foreground">6 profissionais ativos</p>
+          <p className="text-sm text-muted-foreground">{doctors.length} profissionais ativos</p>
         </div>
+        <button
+          onClick={() => navigate("/medicos")}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Novo Médico
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        {doctors.map((doc, i) => (
-          <motion.div
-            key={doc.name}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 + i * 0.05 }}
-            className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all duration-200 cursor-pointer group"
-          >
-            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${colors[i]} flex items-center justify-center mb-3`}>
-              <span className="text-xs font-bold text-primary-foreground">{doc.avatar}</span>
-            </div>
-            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-              {doc.name}
-            </p>
-            <p className="text-xs text-muted-foreground mb-2 truncate">{doc.specialty}</p>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{doc.patients} pacientes</span>
-              <span className="text-warning">★ {doc.rating}</span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      {doctors.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-sm text-muted-foreground">Nenhum médico cadastrado.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {doctors.map((doc, i) => (
+            <motion.div
+              key={doc.id || doc.name}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+              className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all duration-200 cursor-pointer group"
+            >
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${colors[i % colors.length]} flex items-center justify-center mb-3 text-primary-foreground font-bold text-xs`}>
+                {doc.name ? doc.name.substring(0, 2).toUpperCase() : "DR"}
+              </div>
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                {doc.name}
+              </p>
+              <p className="text-xs text-muted-foreground mb-2 truncate">{doc.specialty}</p>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Ativo</span>
+                <span className="text-warning">★ 5.0</span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

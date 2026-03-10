@@ -18,6 +18,24 @@ export interface GastoRow {
 export function useFinanceData() {
   const { organizationId } = useOrganization();
 
+  const transactionsQuery = useQuery({
+    queryKey: ["clinic_transactions", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clinic_transactions")
+        .select("*")
+        .eq("organization_id", organizationId!)
+        .order("date", { ascending: false });
+
+      if (error) {
+        console.warn("Error fetching transactions:", error.message);
+        return [];
+      }
+      return data || [];
+    },
+  });
+
   const gastosQuery = useQuery({
     queryKey: ["gastos", organizationId],
     enabled: !!organizationId,
@@ -84,6 +102,10 @@ export function useFinanceData() {
     },
   });
 
+  const isLoading = transactionsQuery.isLoading || doctorsQuery.isLoading || bankAccountsQuery.isLoading || patientsQuery.isLoading || gastosQuery.isLoading;
+  const isError = transactionsQuery.isError || doctorsQuery.isError || bankAccountsQuery.isError || patientsQuery.isError;
+
+  const rawTransactions = transactionsQuery.data || [];
   const rawGastos = gastosQuery.data || [];
 
   const transactions = useMemo(() => {
@@ -98,31 +120,83 @@ export function useFinanceData() {
       }
     };
 
-    return rawGastos.map((g) => ({
+    const mappedTransactions = rawTransactions.map(t => ({
+      id: t.id,
+      date: formatDate(t.date || ""),
+      description: t.description || "Sem descrição",
+      doctor: t.doctor,
+      patient: t.patient,
+      paymentMethod: t.payment_method,
+      bank: t.bank,
+      valueIn: t.value_in || 0,
+      valueOut: t.value_out || 0,
+      type: t.type as "entrada" | "saida",
+      source: "transaction" as const
+    }));
+
+    const mappedGastos = rawGastos.map(g => ({
       id: g.id,
       date: formatDate(g.data_gasto || g.created_at || ""),
       description: g.descricao || "Gasto IA",
-      doctor: null as string | null,
-      patient: null as string | null,
+      doctor: null,
+      patient: null,
       paymentMethod: g.metodo_pagamento || "N/A",
       bank: "Geral",
-      category: g.categoria || "outros",
       valueIn: 0,
       valueOut: g.valor || 0,
       type: "saida" as const,
-      source: "gasto" as const,
-      fornecedor: g.fornecedor,
+      source: "gasto" as const
     }));
-  }, [rawGastos]);
 
-  const doctors = doctorsQuery.data || [];
-  const bankAccounts = bankAccountsQuery.data || [];
+    return [...mappedTransactions, ...mappedGastos].sort((a, b) => {
+      const dateA = a.date.split("/").reverse().join("-");
+      const dateB = b.date.split("/").reverse().join("-");
+      return dateB.localeCompare(dateA);
+    });
+  }, [rawTransactions, rawGastos]);
 
-  const isLoading = gastosQuery.isLoading || doctorsQuery.isLoading || bankAccountsQuery.isLoading || patientsQuery.isLoading;
-  const isError = gastosQuery.isError || doctorsQuery.isError || bankAccountsQuery.isError || patientsQuery.isError;
+  const bankAccounts = useMemo(() => {
+    const rawAccounts = bankAccountsQuery.data || [];
+    return rawAccounts.map(bank => {
+      const bankTransactions = transactions.filter(t => t.bank === bank.name);
+      const entradas = bankTransactions
+        .filter(t => t.type === "entrada")
+        .reduce((acc, t) => acc + (t.valueIn || 0), 0);
+      const saidas = bankTransactions
+        .filter(t => t.type === "saida")
+        .reduce((acc, t) => acc + (t.valueOut || 0), 0);
 
-  const totalSaidas = transactions.reduce((acc, t) => acc + (t.valueOut || 0), 0);
-  const totalEntradas = 0;
+      return {
+        ...bank,
+        entradas: entradas || bank.entradas || 0,
+        saidas: saidas || bank.saidas || 0,
+        saldo: (bank.saldo || 0) + (entradas - saidas)
+      };
+    });
+  }, [bankAccountsQuery.data, transactions]);
+
+  const doctors = useMemo(() => {
+    const rawDocs = doctorsQuery.data || [];
+    return rawDocs.map(doc => {
+      const docTransactions = transactions.filter(t => t.doctor === doc.name && t.source === "transaction");
+      const revenue = docTransactions.reduce((acc, t) => acc + (t.valueIn || 0), 0);
+      const patientsCount = new Set(docTransactions.map(t => t.patient).filter(Boolean)).size;
+      return {
+        ...doc,
+        revenue: revenue || doc.revenue || 0,
+        patients_count: patientsCount || doc.patients_count || 0
+      };
+    });
+  }, [doctorsQuery.data, transactions]);
+
+  const totalEntradas = transactions
+    .filter((t) => t.type === "entrada")
+    .reduce((acc, t) => acc + (t.valueIn || 0), 0);
+
+  const totalSaidas = transactions
+    .filter((t) => t.type === "saida")
+    .reduce((acc, t) => acc + (t.valueOut || 0), 0);
+
   const saldo = totalEntradas - totalSaidas;
 
   return {
@@ -142,10 +216,11 @@ export function useFinanceData() {
     isLoading,
     isError,
     refetch: () => {
-      gastosQuery.refetch();
+      transactionsQuery.refetch();
       doctorsQuery.refetch();
       bankAccountsQuery.refetch();
       patientsQuery.refetch();
-    },
+      gastosQuery.refetch();
+    }
   };
 }
