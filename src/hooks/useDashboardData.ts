@@ -9,12 +9,14 @@ export function useDashboardData() {
   const agendamentosHoje = useQuery({
     queryKey: ["agendamentos_hoje", today, organizationId],
     enabled: !!organizationId,
+    refetchInterval: 30000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agendamentos")
         .select("*")
         .eq("organization_id", organizationId!)
-        .eq("date", today);
+        .eq("date", today)
+        .order("time", { ascending: true });
       if (error) { console.warn("agendamentos:", error.message); return []; }
       return data || [];
     },
@@ -23,6 +25,7 @@ export function useDashboardData() {
   const leadsCount = useQuery({
     queryKey: ["leads_count", organizationId],
     enabled: !!organizationId,
+    refetchInterval: 30000,
     queryFn: async () => {
       const { count, error } = await supabase
         .from("leads")
@@ -36,6 +39,7 @@ export function useDashboardData() {
   const gastosTotal = useQuery({
     queryKey: ["gastos_total", organizationId],
     enabled: !!organizationId,
+    refetchInterval: 30000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gastos")
