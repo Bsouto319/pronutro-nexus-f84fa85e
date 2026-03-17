@@ -197,7 +197,7 @@ const Agenda = () => {
                                 </Badge>
                                 {appointment.source && (
                                   <span className="text-[11px] font-medium text-primary capitalize">
-                                    via {appointment.source.replaceAll("_", " ")}
+                                    via {appointment.source.split("_").join(" ")}
                                   </span>
                                 )}
                               </div>
