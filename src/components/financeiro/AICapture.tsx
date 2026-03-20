@@ -47,6 +47,15 @@ export function AICapture() {
 
   const handleSend = async () => {
     if (!pendingFile || !organizationId) return;
+
+    const webhookUrl = localStorage.getItem("nexus_n8n_webhook_url");
+    if (!webhookUrl) {
+      toast.error("Webhook não configurado", {
+        description: "Vá em Configurações > Integrações e salve a URL do webhook n8n.",
+      });
+      return;
+    }
+
     setIsUploading(true);
     try {
       const base64 = await new Promise<string>((resolve) => {
@@ -54,8 +63,6 @@ export function AICapture() {
         reader.onloadend = () => resolve(reader.result as string);
         reader.readAsDataURL(pendingFile);
       });
-
-      const webhookUrl = "https://n8n.btechsouto.shop/webhook/pronutro-saas3";
 
       const response = await fetch(webhookUrl, {
         method: "POST",
