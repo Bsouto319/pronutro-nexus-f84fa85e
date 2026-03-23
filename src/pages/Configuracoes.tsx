@@ -12,6 +12,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getInvalidWebhookReason, getStoredWebhookUrl, saveWebhookUrl } from "@/lib/n8n-webhook";
 
 const Configuracoes = () => {
   const { organizationId } = useOrganization();
@@ -40,7 +41,7 @@ const Configuracoes = () => {
 
   useEffect(() => {
     if (org) setOrgName(org.name);
-    const saved = localStorage.getItem("nexus_n8n_webhook_url");
+    const saved = getStoredWebhookUrl();
     if (saved) setN8nUrl(saved);
   }, [org]);
 
@@ -63,12 +64,16 @@ const Configuracoes = () => {
   };
 
   const handleSaveWebhook = () => {
-    if (n8nUrl && !n8nUrl.startsWith("http")) {
-      toast.error("URL inválida");
+    const invalidReason = n8nUrl ? getInvalidWebhookReason(n8nUrl) : null;
+
+    if (invalidReason) {
+      toast.error("URL inválida", {
+        description: invalidReason,
+      });
       return;
     }
-    localStorage.setItem("nexus_n8n_webhook_url", n8nUrl);
-    window.dispatchEvent(new Event("n8n_url_updated"));
+
+    saveWebhookUrl(n8nUrl);
     toast.success("URL do Webhook salva!");
   };
 
@@ -144,6 +149,14 @@ const Configuracoes = () => {
                   variant="outline"
                   onClick={async () => {
                     if (!n8nUrl) return toast.error("Insira a URL primeiro");
+
+                    const invalidReason = getInvalidWebhookReason(n8nUrl);
+                    if (invalidReason) {
+                      return toast.error("URL inválida", {
+                        description: invalidReason,
+                      });
+                    }
+
                     try {
                       const res = await fetch(n8nUrl, {
                         method: 'POST',
