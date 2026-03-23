@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { getInvalidWebhookReason, getStoredWebhookUrl, saveWebhookUrl } from "@/lib/n8n-webhook";
 
 const services = [
   {
@@ -39,19 +40,22 @@ const Integracoes = () => {
 
   useEffect(() => {
     // Load saved URL from localStorage
-    const savedUrl = localStorage.getItem("nexus_n8n_webhook_url");
+    const savedUrl = getStoredWebhookUrl();
     if (savedUrl) setN8nUrl(savedUrl);
   }, []);
 
   const handleSaveUrl = () => {
-    if (!n8nUrl.startsWith("http")) {
-      toast.error("Por favor, insira uma URL válida (começando com http ou https)");
+    const invalidReason = getInvalidWebhookReason(n8nUrl);
+
+    if (invalidReason) {
+      toast.error("URL inválida", {
+        description: invalidReason,
+      });
       return;
     }
-    localStorage.setItem("nexus_n8n_webhook_url", n8nUrl);
+
+    saveWebhookUrl(n8nUrl);
     toast.success("URL do Webhook salva com sucesso!");
-    // Trigger a custom event so other components know the URL changed
-    window.dispatchEvent(new Event("n8n_url_updated"));
   };
 
   return (
@@ -130,6 +134,14 @@ const Integracoes = () => {
                 className="glass whitespace-nowrap"
                 onClick={async () => {
                   if (!n8nUrl) return toast.error("Insira a URL primeiro");
+
+                  const invalidReason = getInvalidWebhookReason(n8nUrl);
+                  if (invalidReason) {
+                    return toast.error("URL inválida", {
+                      description: invalidReason,
+                    });
+                  }
+
                   toast.loading("Testando conexão...");
                   try {
                     const res = await fetch(n8nUrl, {

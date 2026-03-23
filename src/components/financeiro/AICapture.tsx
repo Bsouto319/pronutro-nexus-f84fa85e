@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
+import { getInvalidWebhookReason, getStoredWebhookUrl, postFileToN8nWebhook } from "@/lib/n8n-webhook";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
@@ -19,6 +20,28 @@ export function AICapture() {
   const { organizationId } = useOrganization();
   const cameraRef = useRef<HTMLInputElement>(null);
   const uploadRef = useRef<HTMLInputElement>(null);
+
+  const resetSelection = () => {
+    setPreview(null);
+    setPendingFile(null);
+
+    if (cameraRef.current) cameraRef.current.value = "";
+    if (uploadRef.current) uploadRef.current.value = "";
+  };
+
+  const saveFallbackExpense = async () => {
+    if (!pendingFile || !organizationId) return;
+
+    const { error } = await supabase.from("gastos").insert([{
+      organization_id: organizationId,
+      descricao: `Recibo: ${pendingFile.name}`,
+      valor: 0,
+      categoria: "recibo_upload",
+      data_gasto: new Date().toISOString().slice(0, 10),
+    }]);
+
+    if (error) throw error;
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -51,71 +74,59 @@ export function AICapture() {
 
     setIsUploading(true);
     try {
-      const webhookUrl = localStorage.getItem("nexus_n8n_webhook_url");
+      const webhookUrl = getStoredWebhookUrl();
+      const invalidWebhookReason = webhookUrl ? getInvalidWebhookReason(webhookUrl) : null;
 
-      if (webhookUrl) {
-        // Send to n8n for AI processing
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(pendingFile);
+      if (webhookUrl && !invalidWebhookReason) {
+        await postFileToN8nWebhook({
+          file: pendingFile,
+          organizationId,
+          webhookUrl,
         });
 
-        const response = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            source: "dashboard",
-            messageType: pendingFile.type.includes("pdf") ? "document" : "image",
-            senderName: "Usuário Dashboard",
-            organizationId,
-            fileURL: base64,
-            messageid: `DASH_${Date.now()}`,
-            content: "Upload via Dashboard",
-          }),
+        toast.success("Enviado para análise IA!", {
+          description: "Arquivo enviado ao workflow com suporte a binário e JSON para máxima compatibilidade.",
+          icon: <CheckCircle2 className="w-5 h-5 text-success" />,
         });
-
-        if (response.ok) {
-          toast.success("Enviado para análise IA!", {
-            description: "Os dados serão processados e aparecerão no dashboard em breve.",
-            icon: <CheckCircle2 className="w-5 h-5 text-success" />,
-          });
-        } else {
-          throw new Error("Webhook retornou erro");
-        }
       } else {
-        // Fallback: save directly as expense in gastos table
-        const { error } = await supabase.from("gastos").insert([{
-          organization_id: organizationId,
-          descricao: `Recibo: ${pendingFile.name}`,
-          valor: 0,
-          categoria: "recibo_upload",
-          data_gasto: new Date().toISOString().slice(0, 10),
-        }]);
-        if (error) throw error;
-        toast.success("Recibo registrado!", {
-          description: "Salvo no financeiro. Edite o valor na tabela de transações.",
+        await saveFallbackExpense();
+
+        toast.success("Recibo salvo no financeiro!", {
+          description: invalidWebhookReason
+            ? `${invalidWebhookReason} O arquivo foi salvo mesmo assim para você não perder o envio.`
+            : "A URL do workflow não estava configurada; o arquivo foi salvo para edição manual.",
           icon: <CheckCircle2 className="w-5 h-5 text-success" />,
         });
       }
 
-      setPendingFile(null);
-      setPreview(null);
-      setTimeout(() => refetch(), 2000);
+      resetSelection();
+      await refetch();
     } catch (error) {
       console.error(error);
-      toast.error("Erro no processamento", {
-        description: "Não foi possível processar o arquivo. Verifique o webhook em Configurações.",
-        icon: <AlertCircle className="w-5 h-5 text-destructive" />,
-      });
+
+      try {
+        await saveFallbackExpense();
+        resetSelection();
+        await refetch();
+
+        toast.success("Recibo salvo com fallback", {
+          description: "O workflow não respondeu, mas o recibo foi registrado no financeiro para você revisar.",
+          icon: <CheckCircle2 className="w-5 h-5 text-success" />,
+        });
+      } catch (fallbackError) {
+        console.error(fallbackError);
+        toast.error("Erro no processamento", {
+          description: "Não foi possível processar nem salvar o arquivo. Verifique a URL /webhook/... em Configurações.",
+          icon: <AlertCircle className="w-5 h-5 text-destructive" />,
+        });
+      }
     } finally {
       setIsUploading(false);
     }
   };
 
   const clearPreview = () => {
-    setPreview(null);
-    setPendingFile(null);
+    resetSelection();
   };
 
   return (
