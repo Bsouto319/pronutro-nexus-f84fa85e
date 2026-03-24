@@ -263,6 +263,12 @@ const Pacientes = () => {
           </div>
         </div>
       </div>
+      <PatientHistoryPanel
+        patient={selectedPatient}
+        doctors={doctors}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
     </AppLayout>
   );
 };
