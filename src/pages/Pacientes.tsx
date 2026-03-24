@@ -243,7 +243,10 @@ const Pacientes = () => {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="text-primary hover:text-primary/80 transition-colors text-xs font-medium">Ver</button>
+                          <button
+                            onClick={() => { setSelectedPatient(patient); setHistoryOpen(true); }}
+                            className="text-primary hover:text-primary/80 transition-colors text-xs font-medium"
+                          >Ver</button>
                           <button
                             onClick={() => handleDeletePatient(patient.id)}
                             className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-md hover:bg-destructive/10"
