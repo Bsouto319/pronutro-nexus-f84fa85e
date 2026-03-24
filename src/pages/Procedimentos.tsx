@@ -70,7 +70,8 @@ const Procedimentos = () => {
       setAddOpen(false);
       queryClient.invalidateQueries({ queryKey: ["procedures"] });
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao criar procedimento.");
     } finally {
       setIsSubmitting(false);
     }
@@ -93,7 +94,8 @@ const Procedimentos = () => {
       setEditOpen(false);
       queryClient.invalidateQueries({ queryKey: ["procedures"] });
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao atualizar procedimento.");
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +111,8 @@ const Procedimentos = () => {
       setDeleteOpen(false);
       queryClient.invalidateQueries({ queryKey: ["procedures"] });
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao remover procedimento.");
     } finally {
       setIsSubmitting(false);
     }
