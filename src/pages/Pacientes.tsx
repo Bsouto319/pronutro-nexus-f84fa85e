@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,8 @@ const Pacientes = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<typeof patients[0] | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const filteredPatients = patients.filter(p =>
@@ -240,7 +243,10 @@ const Pacientes = () => {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="text-primary hover:text-primary/80 transition-colors text-xs font-medium">Ver</button>
+                          <button
+                            onClick={() => { setSelectedPatient(patient); setHistoryOpen(true); }}
+                            className="text-primary hover:text-primary/80 transition-colors text-xs font-medium"
+                          >Ver</button>
                           <button
                             onClick={() => handleDeletePatient(patient.id)}
                             className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-md hover:bg-destructive/10"
@@ -257,6 +263,12 @@ const Pacientes = () => {
           </div>
         </div>
       </div>
+      <PatientHistoryPanel
+        patient={selectedPatient}
+        doctors={doctors}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
     </AppLayout>
   );
 };

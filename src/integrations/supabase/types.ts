@@ -379,6 +379,73 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_consultations: {
+        Row: {
+          consultation_date: string
+          created_at: string
+          doctor_id: string | null
+          id: string
+          medications: string | null
+          notes: string | null
+          organization_id: string
+          patient_id: string
+          payment_method: string | null
+          procedure_name: string | null
+          procedure_value: number
+          quantities: string | null
+        }
+        Insert: {
+          consultation_date?: string
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          medications?: string | null
+          notes?: string | null
+          organization_id: string
+          patient_id: string
+          payment_method?: string | null
+          procedure_name?: string | null
+          procedure_value?: number
+          quantities?: string | null
+        }
+        Update: {
+          consultation_date?: string
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          medications?: string | null
+          notes?: string | null
+          organization_id?: string
+          patient_id?: string
+          payment_method?: string | null
+          procedure_name?: string | null
+          procedure_value?: number
+          quantities?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_consultations_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_consultations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       procedures: {
         Row: {
           created_at: string
