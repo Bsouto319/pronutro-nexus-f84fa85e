@@ -7,9 +7,8 @@ import { toast } from "sonner";
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
-import { getInvalidWebhookReason, getStoredWebhookUrl, postFileToN8nWebhook } from "@/lib/n8n-webhook";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 export function AICapture() {
@@ -24,23 +23,8 @@ export function AICapture() {
   const resetSelection = () => {
     setPreview(null);
     setPendingFile(null);
-
     if (cameraRef.current) cameraRef.current.value = "";
     if (uploadRef.current) uploadRef.current.value = "";
-  };
-
-  const saveFallbackExpense = async () => {
-    if (!pendingFile || !organizationId) return;
-
-    const { error } = await supabase.from("gastos").insert([{
-      organization_id: organizationId,
-      descricao: `Recibo: ${pendingFile.name}`,
-      valor: 0,
-      categoria: "recibo_upload",
-      data_gasto: new Date().toISOString().slice(0, 10),
-    }]);
-
-    if (error) throw error;
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,17 +32,13 @@ export function AICapture() {
     if (!file) return;
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Tipo de arquivo não suportado", {
-        description: "Aceitos: JPEG, PNG, WebP ou PDF.",
-      });
+      toast.error("Tipo de arquivo não suportado", { description: "Aceitos: JPEG, PNG, WebP ou PDF." });
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("Arquivo muito grande", {
-        description: "O limite é 10 MB por arquivo.",
-      });
+      toast.error("Arquivo muito grande", { description: "O limite é 10 MB por arquivo." });
       event.target.value = "";
       return;
     }
@@ -69,64 +49,64 @@ export function AICapture() {
     setPendingFile(file);
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        // Remove data URL prefix (e.g. "data:image/jpeg;base64,")
+        const base64 = result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSend = async () => {
     if (!pendingFile || !organizationId) return;
 
     setIsUploading(true);
     try {
-      const webhookUrl = getStoredWebhookUrl();
-      const invalidWebhookReason = webhookUrl ? getInvalidWebhookReason(webhookUrl) : null;
+      const imageBase64 = await fileToBase64(pendingFile);
 
-      if (webhookUrl && !invalidWebhookReason) {
-        await postFileToN8nWebhook({
-          file: pendingFile,
+      const { data, error } = await supabase.functions.invoke("analyze-receipt", {
+        body: {
+          imageBase64,
+          fileName: pendingFile.name,
           organizationId,
-          webhookUrl,
-        });
+        },
+      });
 
-        toast.success("Enviado para análise IA!", {
-          description: "Arquivo enviado ao workflow com suporte a binário e JSON para máxima compatibilidade.",
+      if (error) throw error;
+
+      if (data?.success) {
+        const { extracted } = data;
+        const valorFormatado = (extracted.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+        toast.success("Recibo processado com IA!", {
+          description: `${extracted.descricao} — ${valorFormatado} (${extracted.categoria})`,
           icon: <CheckCircle2 className="w-5 h-5 text-success" />,
+          duration: 6000,
         });
       } else {
-        await saveFallbackExpense();
-
-        toast.success("Recibo salvo no financeiro!", {
-          description: invalidWebhookReason
-            ? `${invalidWebhookReason} O arquivo foi salvo mesmo assim para você não perder o envio.`
-            : "A URL do workflow não estava configurada; o arquivo foi salvo para edição manual.",
-          icon: <CheckCircle2 className="w-5 h-5 text-success" />,
+        toast.warning("IA não conseguiu extrair todos os dados", {
+          description: data?.error || "O recibo foi salvo para revisão manual.",
+          icon: <AlertCircle className="w-5 h-5 text-yellow-500" />,
         });
       }
 
       resetSelection();
       await refetch();
-    } catch (error) {
-      console.error(error);
-
-      try {
-        await saveFallbackExpense();
-        resetSelection();
-        await refetch();
-
-        toast.success("Recibo salvo com fallback", {
-          description: "O workflow não respondeu, mas o recibo foi registrado no financeiro para você revisar.",
-          icon: <CheckCircle2 className="w-5 h-5 text-success" />,
-        });
-      } catch (fallbackError) {
-        console.error(fallbackError);
-        toast.error("Erro no processamento", {
-          description: "Não foi possível processar nem salvar o arquivo. Verifique a URL /webhook/... em Configurações.",
-          icon: <AlertCircle className="w-5 h-5 text-destructive" />,
-        });
-      }
+    } catch (err) {
+      if (import.meta.env.DEV) console.error("Analyze receipt error:", err);
+      toast.error("Erro ao processar recibo", {
+        description: "Tente novamente ou insira os dados manualmente.",
+        icon: <AlertCircle className="w-5 h-5 text-destructive" />,
+      });
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const clearPreview = () => {
-    resetSelection();
   };
 
   return (
@@ -144,7 +124,7 @@ export function AICapture() {
             <div>
               <CardTitle className="text-xl font-display font-bold text-foreground">Analista de Insumos IA</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Envie fotos de notas, listas de materiais ou boletos para processamento automático.
+                Envie fotos de notas, listas de materiais ou boletos — a IA extrai valores e categoriza automaticamente.
               </CardDescription>
             </div>
           </div>
@@ -181,7 +161,7 @@ export function AICapture() {
                       <Send className="w-4 h-4 mr-2" />
                       Enviar para Análise
                     </Button>
-                    <Button variant="outline" size="icon" onClick={clearPreview}>
+                    <Button variant="outline" size="icon" onClick={resetSelection}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
@@ -189,7 +169,7 @@ export function AICapture() {
               </div>
 
               <div className="text-[10px] text-muted-foreground bg-muted/30 p-2 rounded border border-border/20">
-                <p>💡 Fotos nítidas e bem iluminadas garantem 99.8% de precisão na extração. Máx 10 MB.</p>
+                <p>💡 Fotos nítidas e bem iluminadas garantem maior precisão na extração. Máx 10 MB.</p>
               </div>
             </div>
 
@@ -213,7 +193,7 @@ export function AICapture() {
               {isUploading && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
                   <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                  <p className="text-sm font-medium animate-pulse">Analisando insumos...</p>
+                  <p className="text-sm font-medium animate-pulse">IA analisando recibo...</p>
                 </div>
               )}
             </div>
