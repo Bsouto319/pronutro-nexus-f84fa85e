@@ -88,7 +88,7 @@ const Agenda = () => {
         .eq("organization_id", organizationId!)
         .eq("date", dateStr)
         .order("time", { ascending: true });
-      if (error) { console.warn("agendamentos:", error.message); return []; }
+      if (error) { if (import.meta.env.DEV) console.warn("agendamentos:", error.message); return []; }
       return (data || []) as AppointmentItem[];
     },
   });
