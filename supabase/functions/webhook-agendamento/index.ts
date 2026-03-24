@@ -37,19 +37,35 @@ Deno.serve(async (req) => {
     const ORG_ID = "65777d18-1126-481d-93d9-169237388d7f";
 
     // Accept flexible field names from n8n
-    const patient_name = body.patient_name || body.paciente || body.nome || body.summary || "Paciente não identificado";
-    const doctor_name = body.doctor_name || body.medico || body.doctor || null;
-    const date = body.date || body.data || new Date().toISOString().split("T")[0];
-    const time = body.time || body.horario || body.hora || null;
-    const status = body.status || "confirmado";
-    const source = body.source || "google_calendar";
-    const notes = body.notes || body.observacoes || body.description || null;
+    const safe = (s: unknown, max = 255): string | null =>
+      typeof s === "string" ? s.slice(0, max) : null;
+
+    const patient_name = safe(body.patient_name || body.paciente || body.nome || body.summary) || "Paciente não identificado";
+    const doctor_name = safe(body.doctor_name || body.medico || body.doctor);
+    const rawDate = body.date || body.data || new Date().toISOString().split("T")[0];
+    const time = safe(body.time || body.horario || body.hora);
+    const rawStatus = body.status || "confirmado";
+    const source = safe(body.source || "google_calendar");
+    const notes = safe(body.notes || body.observacoes || body.description, 2000);
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(rawDate)) {
+      return new Response(JSON.stringify({ success: false, error: "Invalid date format. Expected YYYY-MM-DD." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate status enum
+    const VALID_STATUSES = ["confirmado", "pendente", "cancelado"];
+    const status = VALID_STATUSES.includes(rawStatus) ? rawStatus : "pendente";
 
     const { data, error } = await supabase.from("agendamentos").insert({
       organization_id: ORG_ID,
       patient_name,
       doctor_name,
-      date,
+      date: rawDate,
       time,
       status,
       source,
