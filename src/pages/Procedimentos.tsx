@@ -36,7 +36,7 @@ const Procedimentos = () => {
         .select("*")
         .eq("organization_id", organizationId!)
         .order("name", { ascending: true });
-      if (error) { console.warn(error.message); return []; }
+      if (error) { if (import.meta.env.DEV) console.warn(error.message); return []; }
       return data || [];
     },
   });

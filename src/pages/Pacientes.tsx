@@ -70,8 +70,8 @@ const Pacientes = () => {
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
     } catch (error: any) {
-      console.error(error);
-      toast.error("Erro ao cadastrar paciente: " + error.message);
+      if (import.meta.env.DEV) console.error(error);
+      toast.error("Erro ao cadastrar paciente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +91,8 @@ const Pacientes = () => {
       toast.success("Paciente removido com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
     } catch (error: any) {
-      toast.error("Erro ao remover paciente: " + error.message);
+      if (import.meta.env.DEV) console.error(error);
+      toast.error("Erro ao remover paciente.");
     }
   };
 

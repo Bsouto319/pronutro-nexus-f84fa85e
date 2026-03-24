@@ -29,7 +29,7 @@ export function useFinanceData() {
         .order("date", { ascending: false });
 
       if (error) {
-        console.warn("Error fetching transactions:", error.message);
+        if (import.meta.env.DEV) console.warn("Error fetching transactions:", error.message);
         return [];
       }
       return data || [];
@@ -47,7 +47,7 @@ export function useFinanceData() {
         .order("data_gasto", { ascending: false });
 
       if (error) {
-        console.warn("Error fetching gastos:", error.message);
+        if (import.meta.env.DEV) console.warn("Error fetching gastos:", error.message);
         return [] as GastoRow[];
       }
       return (data || []) as unknown as GastoRow[];
@@ -63,7 +63,7 @@ export function useFinanceData() {
         .select("*")
         .eq("organization_id", organizationId!);
       if (error) {
-        console.warn("Error fetching doctors:", error.message);
+        if (import.meta.env.DEV) console.warn("Error fetching doctors:", error.message);
         return [];
       }
       return data || [];
@@ -79,7 +79,7 @@ export function useFinanceData() {
         .select("*")
         .eq("organization_id", organizationId!);
       if (error) {
-        console.warn("Error fetching bank accounts:", error.message);
+        if (import.meta.env.DEV) console.warn("Error fetching bank accounts:", error.message);
         return [];
       }
       return data || [];
@@ -95,7 +95,7 @@ export function useFinanceData() {
         .select("*")
         .eq("organization_id", organizationId!);
       if (error) {
-        console.warn("Error fetching patients:", error.message);
+        if (import.meta.env.DEV) console.warn("Error fetching patients:", error.message);
         return [];
       }
       return data || [];

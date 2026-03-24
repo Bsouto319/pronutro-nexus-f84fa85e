@@ -47,7 +47,8 @@ const Auth = () => {
         toast.success("Verifique seu e-mail para confirmar o cadastro.");
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao processar solicitação.");
+      if (import.meta.env.DEV) console.error(error);
+      toast.error("Erro ao processar solicitação.");
     } finally {
       setSubmitting(false);
     }
