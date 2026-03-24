@@ -49,7 +49,7 @@ export function AppointmentsList() {
         .order("time", { ascending: true });
 
       if (error) {
-        console.error("Erro ao buscar agendamentos:", error);
+        if (import.meta.env.DEV) console.error("Erro ao buscar agendamentos:", error);
         throw error;
       }
 

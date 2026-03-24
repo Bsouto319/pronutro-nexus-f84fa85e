@@ -64,7 +64,8 @@ const Medicos = () => {
       setAddOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clinic_doctors"] });
     } catch (error: any) {
-      toast.error("Erro: " + error.message);
+      if (import.meta.env.DEV) console.error(error);
+      toast.error("Erro ao cadastrar médico.");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,7 +90,8 @@ const Medicos = () => {
       setEditOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clinic_doctors"] });
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao atualizar médico.");
     } finally {
       setIsSubmitting(false);
     }
@@ -105,7 +107,8 @@ const Medicos = () => {
       setDeleteOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clinic_doctors"] });
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao remover médico.");
     } finally {
       setIsSubmitting(false);
     }

@@ -17,7 +17,7 @@ export function useDashboardData() {
         .eq("organization_id", organizationId!)
         .eq("date", today)
         .order("time", { ascending: true });
-      if (error) { console.warn("agendamentos:", error.message); return []; }
+      if (error) { if (import.meta.env.DEV) console.warn("agendamentos:", error.message); return []; }
       return data || [];
     },
   });
@@ -31,7 +31,7 @@ export function useDashboardData() {
         .from("leads")
         .select("*", { count: "exact", head: true })
         .eq("organization_id", organizationId!);
-      if (error) { console.warn("leads:", error.message); return 0; }
+      if (error) { if (import.meta.env.DEV) console.warn("leads:", error.message); return 0; }
       return count || 0;
     },
   });
@@ -45,7 +45,7 @@ export function useDashboardData() {
         .from("gastos")
         .select("valor")
         .eq("organization_id", organizationId!);
-      if (error) { console.warn("gastos:", error.message); return 0; }
+      if (error) { if (import.meta.env.DEV) console.warn("gastos:", error.message); return 0; }
       return (data || []).reduce((acc: number, g: any) => acc + (g.valor || 0), 0);
     },
   });

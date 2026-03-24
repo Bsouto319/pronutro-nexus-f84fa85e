@@ -57,7 +57,8 @@ const Configuracoes = () => {
       toast.success("Nome da organização atualizado!");
       queryClient.invalidateQueries({ queryKey: ["organization"] });
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao salvar configurações.");
     } finally {
       setIsSaving(false);
     }

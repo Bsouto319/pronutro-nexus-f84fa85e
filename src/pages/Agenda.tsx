@@ -131,7 +131,8 @@ const Agenda = () => {
       setEditOpen(false);
       queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
     } catch (err: any) {
-      toast.error("Erro ao atualizar: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao atualizar agendamento.");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +151,8 @@ const Agenda = () => {
       setDeleteOpen(false);
       queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
     } catch (err: any) {
-      toast.error("Erro ao excluir: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao excluir agendamento.");
     } finally {
       setIsSubmitting(false);
     }
@@ -177,7 +179,8 @@ const Agenda = () => {
       setAddOpen(false);
       queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
     } catch (err: any) {
-      toast.error("Erro ao criar: " + err.message);
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao criar agendamento.");
     } finally {
       setIsSubmitting(false);
     }

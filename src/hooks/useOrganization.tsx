@@ -34,7 +34,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        console.warn("Error fetching organization:", error.message);
+        if (import.meta.env.DEV) console.warn("Error fetching organization:", error.message);
       }
       setOrganizationId(data?.organization_id ?? null);
       setLoading(false);
