@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Instagram, Phone, Globe } from "lucide-react";
+import { MessageSquare, Instagram, Phone, Globe, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface LeadCardProps {
@@ -19,6 +19,7 @@ interface LeadCardProps {
   onClick: () => void;
   statusOptions: { value: string; label: string }[];
   onStatusChange: (id: string, status: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 function getInitials(name: string) {
@@ -49,7 +50,7 @@ function isHotLead(dateStr: string) {
   return Date.now() - new Date(dateStr).getTime() > 2 * 60 * 60 * 1000;
 }
 
-export function LeadCard({ lead, onClick, statusOptions, onStatusChange }: LeadCardProps) {
+export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelete }: LeadCardProps) {
   const lastActivity = lead.lastMessageAt || lead.created_at;
   const hot = isHotLead(lastActivity);
 
