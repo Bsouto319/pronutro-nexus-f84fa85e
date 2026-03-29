@@ -250,10 +250,12 @@ export type Database = {
           created_at: string
           data_gasto: string | null
           descricao: string
+          doctor_id: string | null
           fornecedor: string | null
           id: string
           metodo_pagamento: string | null
           organization_id: string
+          origem_pagamento: string | null
           valor: number
         }
         Insert: {
@@ -261,10 +263,12 @@ export type Database = {
           created_at?: string
           data_gasto?: string | null
           descricao?: string
+          doctor_id?: string | null
           fornecedor?: string | null
           id?: string
           metodo_pagamento?: string | null
           organization_id: string
+          origem_pagamento?: string | null
           valor?: number
         }
         Update: {
@@ -272,13 +276,22 @@ export type Database = {
           created_at?: string
           data_gasto?: string | null
           descricao?: string
+          doctor_id?: string | null
           fornecedor?: string | null
           id?: string
           metodo_pagamento?: string | null
           organization_id?: string
+          origem_pagamento?: string | null
           valor?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "gastos_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_doctors"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gastos_organization_id_fkey"
             columns: ["organization_id"]

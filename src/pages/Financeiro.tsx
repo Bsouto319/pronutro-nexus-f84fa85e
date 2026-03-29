@@ -9,6 +9,7 @@ import { ExpenseCategories } from "@/components/financeiro/ExpenseCategories";
 import { FinanceCharts } from "@/components/financeiro/FinanceCharts";
 import { TransactionsTable } from "@/components/financeiro/TransactionsTable";
 import { AICapture } from "@/components/financeiro/AICapture";
+import { FinanceExport } from "@/components/financeiro/FinanceExport";
 import { useFinanceData } from "@/hooks/useFinanceData";
 
 const Financeiro = () => {
@@ -19,6 +20,7 @@ const Financeiro = () => {
       <TopBar title="Financeiro" subtitle="Controle financeiro completo da clínica" onRefresh={refetch} />
       <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
         <AICapture />
+        <FinanceExport />
         <FinanceKPIs />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
