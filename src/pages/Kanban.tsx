@@ -106,7 +106,28 @@ const Kanban = () => {
     <AppLayout>
       <TopBar title="Gestão de Leads" subtitle="Monitoramento em tempo real da Maria IA" />
       <div className="p-4 md:p-6 space-y-4 max-w-[1600px] mx-auto overflow-hidden flex flex-col h-[calc(100vh-140px)]">
-        <LeadStatsRow {...stats} />
+        <div className="flex items-center justify-between">
+          <LeadStatsRow {...stats} />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 shrink-0 ml-3">
+                <Trash2 className="w-4 h-4" /> Limpar antigos
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remover leads antigos?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Isso irá remover todos os leads criados antes de hoje. Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteOldLeads} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 min-h-0">
           {columns.map((status) => (
@@ -130,6 +151,7 @@ const Kanban = () => {
                       onClick={() => handleCardClick(lead)}
                       statusOptions={statusOptions}
                       onStatusChange={updateStatus}
+                      onDelete={deleteLead}
                     />
                   ))}
                 </AnimatePresence>
