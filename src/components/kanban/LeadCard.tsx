@@ -94,16 +94,27 @@ export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelet
             </span>
           )}
         </div>
-        <select
-          value={lead.status || "novo_lead"}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => { e.stopPropagation(); onStatusChange(lead.id, e.target.value); }}
-          className="bg-transparent text-[10px] font-bold text-primary outline-none cursor-pointer hover:underline"
-        >
-          {statusOptions.map(c => (
-            <option key={c.value} value={c.value} className="bg-background text-foreground">{c.label}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1">
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(lead.id); }}
+              className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+              title="Remover lead"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+          <select
+            value={lead.status || "novo_lead"}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => { e.stopPropagation(); onStatusChange(lead.id, e.target.value); }}
+            className="bg-transparent text-[10px] font-bold text-primary outline-none cursor-pointer hover:underline"
+          >
+            {statusOptions.map(c => (
+              <option key={c.value} value={c.value} className="bg-background text-foreground">{c.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
     </motion.div>
   );
