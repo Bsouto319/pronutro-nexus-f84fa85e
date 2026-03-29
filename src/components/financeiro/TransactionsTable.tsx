@@ -4,6 +4,8 @@ import { formatCurrency } from "./financeData";
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Pencil } from "lucide-react";
+import { EditGastoDialog } from "./EditGastoDialog";
 
 const categoryColors: Record<string, string> = {
   alimentacao: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
@@ -20,6 +22,7 @@ const categoryColors: Record<string, string> = {
 export function TransactionsTable() {
   const { transactions, isLoading } = useFinanceData();
   const [filterCategory, setFilterCategory] = useState("");
+  const [editGasto, setEditGasto] = useState<null | { id: string; description: string; category: string; fornecedor: string | null; paymentMethod: string | null; source: string }>(null);
 
   const filtered = useMemo(() => {
     let result = [...transactions];
