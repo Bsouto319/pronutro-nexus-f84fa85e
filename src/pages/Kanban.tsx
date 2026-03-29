@@ -4,13 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { AnimatePresence } from "framer-motion";
-import { CheckCircle2, Calendar, AlertCircle, Smartphone } from "lucide-react";
+import { CheckCircle2, Calendar, AlertCircle, Smartphone, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { LeadCard } from "@/components/kanban/LeadCard";
 import { LeadPanel } from "@/components/kanban/LeadPanel";
 import { LeadStatsRow } from "@/components/kanban/LeadStatsRow";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   novo_lead: { label: "Entrada N8N", color: "bg-blue-500", icon: Smartphone },
@@ -59,6 +61,33 @@ const Kanban = () => {
   const handleCardClick = (lead: any) => {
     setSelectedLead(lead);
     setPanelOpen(true);
+  };
+
+  const deleteLead = async (id: string) => {
+    try {
+      const { error } = await supabase.from("leads").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Lead removido!");
+      refetch();
+    } catch {
+      toast.error("Erro ao remover lead.");
+    }
+  };
+
+  const deleteOldLeads = async () => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .eq("organization_id", organizationId!)
+        .lt("created_at", today);
+      if (error) throw error;
+      toast.success("Leads anteriores removidos!");
+      refetch();
+    } catch {
+      toast.error("Erro ao remover leads antigos.");
+    }
   };
 
   const statusOptions = columns.map(c => ({ value: c, label: statusConfig[c].label }));
