@@ -80,7 +80,7 @@ export function TransactionsTable() {
               </tr>
             ) : (
               filtered.map((t) => (
-                <tr key={t.id} className="border-t border-border/20 hover:bg-primary/5 transition-colors">
+                <tr key={t.id} className="border-t border-border/20 hover:bg-primary/5 transition-colors group">
                   <td className="py-2.5 px-4 text-xs text-muted-foreground font-mono">{t.date}</td>
                   <td className="py-2.5 px-4">
                     <div className="text-xs text-foreground font-medium truncate max-w-[200px]" title={t.description}>
@@ -97,12 +97,34 @@ export function TransactionsTable() {
                     {formatCurrency(t.valueOut)}
                   </td>
                   <td className="py-2.5 px-4 text-xs text-muted-foreground">{t.paymentMethod}</td>
+                  <td className="py-2.5 px-1">
+                    <button
+                      onClick={() => setEditGasto({
+                        id: t.id,
+                        description: t.description,
+                        category: t.category,
+                        fornecedor: t.fornecedor,
+                        paymentMethod: t.paymentMethod,
+                        source: t.source,
+                      })}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+                      title="Editar"
+                    >
+                      <Pencil className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      <EditGastoDialog
+        open={!!editGasto}
+        onOpenChange={(open) => { if (!open) setEditGasto(null); }}
+        gasto={editGasto}
+      />
     </motion.div>
   );
 }
