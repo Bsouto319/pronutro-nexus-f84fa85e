@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Instagram, Phone, Globe } from "lucide-react";
+import { MessageSquare, Instagram, Phone, Globe, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface LeadCardProps {
@@ -19,6 +19,7 @@ interface LeadCardProps {
   onClick: () => void;
   statusOptions: { value: string; label: string }[];
   onStatusChange: (id: string, status: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 function getInitials(name: string) {
@@ -49,7 +50,7 @@ function isHotLead(dateStr: string) {
   return Date.now() - new Date(dateStr).getTime() > 2 * 60 * 60 * 1000;
 }
 
-export function LeadCard({ lead, onClick, statusOptions, onStatusChange }: LeadCardProps) {
+export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelete }: LeadCardProps) {
   const lastActivity = lead.lastMessageAt || lead.created_at;
   const hot = isHotLead(lastActivity);
 
@@ -93,16 +94,27 @@ export function LeadCard({ lead, onClick, statusOptions, onStatusChange }: LeadC
             </span>
           )}
         </div>
-        <select
-          value={lead.status || "novo_lead"}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => { e.stopPropagation(); onStatusChange(lead.id, e.target.value); }}
-          className="bg-transparent text-[10px] font-bold text-primary outline-none cursor-pointer hover:underline"
-        >
-          {statusOptions.map(c => (
-            <option key={c.value} value={c.value} className="bg-background text-foreground">{c.label}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1">
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(lead.id); }}
+              className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+              title="Remover lead"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+          <select
+            value={lead.status || "novo_lead"}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => { e.stopPropagation(); onStatusChange(lead.id, e.target.value); }}
+            className="bg-transparent text-[10px] font-bold text-primary outline-none cursor-pointer hover:underline"
+          >
+            {statusOptions.map(c => (
+              <option key={c.value} value={c.value} className="bg-background text-foreground">{c.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
     </motion.div>
   );
