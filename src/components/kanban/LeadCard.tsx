@@ -80,7 +80,7 @@ export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelet
             {getChannelIcon(lead.channel || lead.source)}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            {lead.lastMessage || lead.phone || "Sem mensagens"}
+            {lead.last_message || lead.phone || "Sem mensagens"}
           </p>
         </div>
       </div>

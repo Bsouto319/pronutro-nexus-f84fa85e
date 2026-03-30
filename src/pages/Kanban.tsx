@@ -42,8 +42,24 @@ const Kanban = () => {
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 30000,
+    refetchInterval: 10000,
   });
+
+  useEffect(() => {
+    if (!organizationId) return;
+    const channel = supabase
+      .channel("leads_realtime_kanban")
+      .on("postgres_changes" as any, {
+        event: "*",
+        schema: "public",
+        table: "leads",
+        filter: `organization_id=eq.${organizationId}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["leads_kanban", organizationId] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [organizationId, queryClient]);
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
