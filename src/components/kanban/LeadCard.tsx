@@ -11,10 +11,10 @@ interface LeadCardProps {
     source?: string | null;
     status: string;
     created_at: string;
-    lastMessage?: string;
-    lastMessageAt?: string;
+    last_message?: string | null;
+    last_message_at?: string | null;
     assignedTo?: string;
-    channel?: string;
+    channel?: string | null;
   };
   onClick: () => void;
   statusOptions: { value: string; label: string }[];
@@ -51,7 +51,7 @@ function isHotLead(dateStr: string) {
 }
 
 export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelete }: LeadCardProps) {
-  const lastActivity = lead.lastMessageAt || lead.created_at;
+  const lastActivity = lead.last_message_at || lead.created_at;
   const hot = isHotLead(lastActivity);
 
   return (
@@ -80,7 +80,7 @@ export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelet
             {getChannelIcon(lead.channel || lead.source)}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            {lead.lastMessage || lead.phone || "Sem mensagens"}
+            {lead.last_message || lead.phone || "Sem mensagens"}
           </p>
         </div>
       </div>

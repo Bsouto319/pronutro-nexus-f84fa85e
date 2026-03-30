@@ -1,13 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { AnimatePresence } from "framer-motion";
 import { CheckCircle2, Calendar, AlertCircle, Smartphone, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { LeadCard } from "@/components/kanban/LeadCard";
 import { LeadPanel } from "@/components/kanban/LeadPanel";
 import { LeadStatsRow } from "@/components/kanban/LeadStatsRow";
@@ -26,6 +26,7 @@ const columns = ["novo_lead", "em_atendimento", "qualificado", "agendado", "perd
 
 const Kanban = () => {
   const { organizationId } = useOrganization();
+  const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
@@ -41,8 +42,24 @@ const Kanban = () => {
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 30000,
+    refetchInterval: 10000,
   });
+
+  useEffect(() => {
+    if (!organizationId) return;
+    const channel = supabase
+      .channel("leads_realtime_kanban")
+      .on("postgres_changes" as any, {
+        event: "*",
+        schema: "public",
+        table: "leads",
+        filter: `organization_id=eq.${organizationId}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["leads_kanban", organizationId] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [organizationId, queryClient]);
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {

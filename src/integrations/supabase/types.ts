@@ -303,9 +303,12 @@ export type Database = {
       }
       leads: {
         Row: {
+          channel: string | null
           created_at: string
           email: string | null
           id: string
+          last_message: string | null
+          last_message_at: string | null
           name: string
           organization_id: string
           phone: string | null
@@ -313,9 +316,12 @@ export type Database = {
           status: string
         }
         Insert: {
+          channel?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_message?: string | null
+          last_message_at?: string | null
           name: string
           organization_id: string
           phone?: string | null
@@ -323,9 +329,12 @@ export type Database = {
           status?: string
         }
         Update: {
+          channel?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_message?: string | null
+          last_message_at?: string | null
           name?: string
           organization_id?: string
           phone?: string | null
