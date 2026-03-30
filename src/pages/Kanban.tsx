@@ -26,6 +26,7 @@ const columns = ["novo_lead", "em_atendimento", "qualificado", "agendado", "perd
 
 const Kanban = () => {
   const { organizationId } = useOrganization();
+  const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
