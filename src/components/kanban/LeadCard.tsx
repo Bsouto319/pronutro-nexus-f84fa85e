@@ -51,7 +51,7 @@ function isHotLead(dateStr: string) {
 }
 
 export function LeadCard({ lead, onClick, statusOptions, onStatusChange, onDelete }: LeadCardProps) {
-  const lastActivity = lead.lastMessageAt || lead.created_at;
+  const lastActivity = lead.last_message_at || lead.created_at;
   const hot = isHotLead(lastActivity);
 
   return (
