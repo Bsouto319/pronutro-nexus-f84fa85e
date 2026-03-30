@@ -1,13 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { AnimatePresence } from "framer-motion";
 import { CheckCircle2, Calendar, AlertCircle, Smartphone, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { LeadCard } from "@/components/kanban/LeadCard";
 import { LeadPanel } from "@/components/kanban/LeadPanel";
 import { LeadStatsRow } from "@/components/kanban/LeadStatsRow";

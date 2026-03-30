@@ -11,10 +11,10 @@ interface LeadCardProps {
     source?: string | null;
     status: string;
     created_at: string;
-    lastMessage?: string;
-    lastMessageAt?: string;
+    last_message?: string | null;
+    last_message_at?: string | null;
     assignedTo?: string;
-    channel?: string;
+    channel?: string | null;
   };
   onClick: () => void;
   statusOptions: { value: string; label: string }[];
