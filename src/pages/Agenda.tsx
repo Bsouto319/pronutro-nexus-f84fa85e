@@ -370,8 +370,8 @@ const Agenda = () => {
                           )}
                         </div>
                         <div>
-                          <p className="text-lg font-display font-bold text-foreground">{appointment.patient_name}</p>
-                          <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:flex-wrap md:items-center md:gap-4">
+                          <p className="text-lg font-display font-bold text-gray-900">{appointment.patient_name}</p>
+                          <div className="mt-2 flex flex-col gap-2 text-sm text-gray-500 md:flex-row md:flex-wrap md:items-center md:gap-4">
                             <span className="inline-flex items-center gap-2"><UserRound className="w-4 h-4" /> Paciente</span>
                             {appointment.doctor_name && <span className="inline-flex items-center gap-2"><Stethoscope className="w-4 h-4" /> Dr(a). {appointment.doctor_name}</span>}
                             <span className="inline-flex items-center gap-2"><Clock3 className="w-4 h-4" /> {appointment.time || "Sem horário"}</span>
