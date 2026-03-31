@@ -289,26 +289,26 @@ const Agenda = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Selecionado</p>
             <p className="text-lg font-display font-bold text-foreground mt-2 capitalize">{formatDateBR(selectedDate)}</p>
           </div>
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Total do dia</p>
             <p className="text-2xl font-display font-bold text-foreground mt-2">{dayAppointments.length}</p>
           </div>
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Confirmados</p>
             <p className="text-2xl font-display font-bold text-success mt-2">{confirmedCount}</p>
           </div>
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Pendentes</p>
             <p className="text-2xl font-display font-bold text-warning mt-2">{pendingCount}</p>
           </div>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <div className="glass rounded-[28px] p-4 md:p-6 card-shadow border border-border/40">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40">
             <Calendar
               mode="single"
               month={visibleMonth}
@@ -317,7 +317,7 @@ const Agenda = () => {
               onSelect={(date) => date && setSelectedDate(date)}
               modifiers={{ booked: bookedDays }}
               modifiersClassNames={{ booked: "relative after:absolute after:bottom-1.5 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-primary" }}
-              className="w-full rounded-2xl bg-background/40"
+              className="w-full rounded-2xl"
               classNames={{
                 months: "flex w-full",
                 month: "w-full space-y-4",
@@ -333,7 +333,7 @@ const Agenda = () => {
             />
           </div>
 
-          <div className="glass rounded-[28px] p-4 md:p-6 card-shadow border border-border/40 min-h-[420px]">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40 min-h-[420px]">
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => <div key={i} className="h-24 animate-pulse bg-muted/20 rounded-2xl" />)}
@@ -357,7 +357,7 @@ const Agenda = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
-                    className="rounded-2xl border border-border/40 bg-background/70 p-4 md:p-5 hover:border-primary/30 transition-colors group"
+                    className="rounded-2xl border border-border/40 bg-secondary/50 p-4 md:p-5 hover:border-primary/30 transition-colors group"
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="space-y-3 min-w-0 flex-1">
