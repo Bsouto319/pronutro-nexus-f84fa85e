@@ -19,6 +19,9 @@ interface LeadPanelProps {
     phone?: string | null;
     email?: string | null;
     source?: string | null;
+    channel?: string | null;
+    last_message?: string | null;
+    last_message_at?: string | null;
     status: string;
     created_at: string;
   } | null;
@@ -141,6 +144,11 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
             <ScrollArea className="flex-1 px-4 py-3">
               <div className="space-y-3">
                 {loading && <p className="text-xs text-muted-foreground text-center py-8">Carregando mensagens...</p>}
+                {!loading && messages.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-8">
+                    Nenhuma conversa registrada para este lead ainda.
+                  </p>
+                )}
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.direction === "sent" ? "justify-end" : "justify-start"}`}>
                     <div
@@ -199,10 +207,22 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
                     <span>{lead.email}</span>
                   </div>
                 )}
-                {lead.source && (
+                {(lead.channel || lead.source) && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">Canal:</span>{" "}
-                    <span className="text-foreground font-medium">{lead.source}</span>
+                    <span className="text-foreground font-medium">{lead.channel || lead.source}</span>
+                  </div>
+                )}
+                {lead.last_message && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Última interação:</span>{" "}
+                    <span className="text-foreground font-medium">{lead.last_message}</span>
+                  </div>
+                )}
+                {lead.last_message_at && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Atualizado em:</span>{" "}
+                    <span className="text-foreground">{new Date(lead.last_message_at).toLocaleString("pt-BR")}</span>
                   </div>
                 )}
                 <div className="text-sm">
