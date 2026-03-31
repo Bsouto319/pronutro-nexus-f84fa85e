@@ -45,8 +45,10 @@ Deno.serve(async (req) => {
     const rawDate = body.date || body.data || new Date().toISOString().split("T")[0];
     const time = safe(body.time || body.horario || body.hora);
     const rawStatus = body.status || "confirmado";
-    const source = safe(body.source || "google_calendar");
-    const notes = safe(body.notes || body.observacoes || body.description, 2000);
+    const source = safe(body.source || body.channel || "google_calendar");
+    const notes = safe(body.notes || body.observacoes || body.description || body.last_message, 2000);
+    const phone = safe(body.phone || body.telefone || body.whatsapp || body.numero, 50);
+    const channel = safe(body.channel || (source?.includes("whatsapp") ? "whatsapp" : null), 50);
 
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -78,6 +80,32 @@ Deno.serve(async (req) => {
     }
 
     console.log("Agendamento created:", data.id);
+
+    if (phone || notes || channel) {
+      const leadStatus = status === "confirmado" ? "agendado" : status === "cancelado" ? "perdido" : "novo_lead";
+
+      const { data: existingLead } = await supabase
+        .from("leads")
+        .select("id, phone")
+        .eq("organization_id", ORG_ID)
+        .or(`name.eq.${patient_name}${phone ? `,phone.eq.${phone}` : ""}`)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingLead) {
+        await supabase
+          .from("leads")
+          .update({
+            phone: phone || existingLead.phone,
+            source,
+            channel,
+            status: leadStatus,
+            last_message: notes || `Agendamento para ${rawDate}${time ? ` às ${time}` : ""}`,
+            last_message_at: new Date().toISOString(),
+          })
+          .eq("id", existingLead.id);
+      }
+    }
 
     return new Response(JSON.stringify({ success: true, id: data.id }), {
       status: 200,
