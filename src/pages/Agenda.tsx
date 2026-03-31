@@ -289,21 +289,21 @@ const Agenda = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Selecionado</p>
-            <p className="text-lg font-display font-bold text-gray-900 mt-2 capitalize">{formatDateBR(selectedDate)}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Selecionado</p>
+            <p className="text-lg font-display font-bold text-foreground mt-2 capitalize">{formatDateBR(selectedDate)}</p>
           </div>
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Total do dia</p>
-            <p className="text-2xl font-display font-bold text-gray-900 mt-2">{dayAppointments.length}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Total do dia</p>
+            <p className="text-2xl font-display font-bold text-foreground mt-2">{dayAppointments.length}</p>
           </div>
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Confirmados</p>
-            <p className="text-2xl font-display font-bold text-emerald-600 mt-2">{confirmedCount}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Confirmados</p>
+            <p className="text-2xl font-display font-bold text-success mt-2">{confirmedCount}</p>
           </div>
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Pendentes</p>
-            <p className="text-2xl font-display font-bold text-amber-500 mt-2">{pendingCount}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Pendentes</p>
+            <p className="text-2xl font-display font-bold text-warning mt-2">{pendingCount}</p>
           </div>
         </div>
 
