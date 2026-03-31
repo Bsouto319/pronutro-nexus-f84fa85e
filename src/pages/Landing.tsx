@@ -21,6 +21,7 @@ function AnimatedSection({ children, className = "", id }: { children: React.Rea
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, ease: "easeOut" }}
       className={className}
+      id={id}
     >
       {children}
     </motion.div>
