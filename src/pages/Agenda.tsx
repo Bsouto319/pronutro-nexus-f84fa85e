@@ -324,11 +324,11 @@ const Agenda = () => {
                 table: "w-full border-collapse",
                 head_row: "grid grid-cols-7",
                 row: "grid grid-cols-7 mt-2",
-                head_cell: "h-10 w-full text-center text-xs font-semibold text-gray-500",
+                head_cell: "h-10 w-full text-center text-xs font-semibold text-muted-foreground",
                 cell: "h-14 w-full p-1 text-center",
-                day: cn("h-12 w-12 rounded-2xl text-sm font-medium mx-auto text-gray-800 hover:bg-gray-100"),
-                day_selected: "!bg-primary !text-white hover:!bg-primary focus:!bg-primary",
-                day_today: "bg-amber-100 text-amber-900",
+                day: cn("h-12 w-12 rounded-2xl text-sm font-medium mx-auto text-foreground hover:bg-muted"),
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary",
+                day_today: "bg-accent text-accent-foreground",
               }}
             />
           </div>
