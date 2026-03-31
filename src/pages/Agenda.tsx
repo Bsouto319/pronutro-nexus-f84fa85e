@@ -377,7 +377,7 @@ const Agenda = () => {
                             <span className="inline-flex items-center gap-2"><Clock3 className="w-4 h-4" /> {appointment.time || "Sem horário"}</span>
                           </div>
                         </div>
-                        {appointment.notes && <p className="text-sm text-gray-500 leading-relaxed">{appointment.notes}</p>}
+                        {appointment.notes && <p className="text-sm text-muted-foreground leading-relaxed">{appointment.notes}</p>}
                       </div>
                       <div className="flex gap-2 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
                         <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => openEdit(appointment)}>
