@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface WebhookMessage {
   id: string;
@@ -19,17 +20,45 @@ export interface WebhookLead {
   lastMessage?: string;
   lastMessageAt?: string;
   assignedTo?: string;
-  channel?: string;
+  channel?: string | null;
   botActive?: boolean;
   tags?: string[];
 }
 
-const MOCK_MESSAGES: WebhookMessage[] = [
-  { id: "m1", leadId: "mock1", direction: "received", content: "Olá, gostaria de agendar uma consulta", timestamp: new Date(Date.now() - 3600000).toISOString(), channel: "whatsapp" },
-  { id: "m2", leadId: "mock1", direction: "sent", content: "Olá! Claro, temos horários disponíveis amanhã às 14h ou 16h. Qual prefere?", timestamp: new Date(Date.now() - 3500000).toISOString(), channel: "whatsapp" },
-  { id: "m3", leadId: "mock1", direction: "received", content: "14h seria perfeito!", timestamp: new Date(Date.now() - 3400000).toISOString(), channel: "whatsapp" },
-  { id: "m4", leadId: "mock1", direction: "sent", content: "Perfeito! Agendado para amanhã às 14h. Enviaremos um lembrete. 😊", timestamp: new Date(Date.now() - 3300000).toISOString(), channel: "whatsapp" },
-];
+const leadMessagesTable = "lead_messages" as any;
+
+function normalizeDirection(value: unknown): WebhookMessage["direction"] {
+  const normalized = typeof value === "string" ? value.toLowerCase() : "";
+
+  if (["sent", "outgoing", "assistant", "bot", "agent"].includes(normalized)) {
+    return "sent";
+  }
+
+  return "received";
+}
+
+function normalizeTimestamp(value: unknown) {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value))
+    ? value
+    : new Date().toISOString();
+}
+
+function normalizeMessage(raw: any, leadId: string): WebhookMessage | null {
+  const content = raw?.content ?? raw?.message ?? raw?.text ?? raw?.body;
+
+  if (typeof content !== "string" || !content.trim()) {
+    return null;
+  }
+
+  return {
+    id: String(raw?.id ?? raw?.message_id ?? `${leadId}-${Date.now()}-${Math.random()}`),
+    leadId,
+    direction: normalizeDirection(raw?.direction ?? raw?.sender ?? raw?.role),
+    content: content.trim(),
+    timestamp: normalizeTimestamp(raw?.timestamp ?? raw?.created_at ?? raw?.at ?? raw?.date),
+    channel: typeof raw?.channel === "string" ? raw.channel : undefined,
+  };
+}
 
 function getWebhookUrl(): string | null {
   return localStorage.getItem("nexus_n8n_webhook_url");
@@ -73,9 +102,34 @@ export function useWebhook() {
   }, [webhookUrl]);
 
   const getMessages = useCallback(async (leadId: string): Promise<WebhookMessage[]> => {
+    const { data: storedMessages, error } = await supabase
+      .from(leadMessagesTable)
+      .select("id, content, direction, channel, created_at")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: true });
+
+    if (!error && storedMessages?.length) {
+      return storedMessages.map((message: any) => ({
+        id: String(message.id),
+        leadId,
+        direction: normalizeDirection(message.direction),
+        content: String(message.content ?? ""),
+        timestamp: normalizeTimestamp(message.created_at),
+        channel: typeof message.channel === "string" ? message.channel : undefined,
+      }));
+    }
+
     const data = await fetchFromWebhook({ action: "getMessages", leadId });
-    if (Array.isArray(data)) return data;
-    return MOCK_MESSAGES.map(m => ({ ...m, leadId }));
+
+    const rawMessages = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.messages)
+        ? data.messages
+        : [];
+
+    return rawMessages
+      .map((message) => normalizeMessage(message, leadId))
+      .filter((message): message is WebhookMessage => message !== null);
   }, [fetchFromWebhook]);
 
   const sendMessage = useCallback(async (leadId: string, message: string) => {
