@@ -262,7 +262,7 @@ const Agenda = () => {
   return (
     <AppLayout>
       <TopBar title="Agenda Médica" subtitle="Visão mensal completa para acompanhar todo o mês" onRefresh={() => refetch()} />
-      <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
+      <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto" style={{ colorScheme: 'light' }}>
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
