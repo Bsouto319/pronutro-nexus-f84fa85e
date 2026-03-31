@@ -357,7 +357,7 @@ const Agenda = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
-                    className="rounded-2xl border border-border/40 bg-secondary/50 p-4 md:p-5 hover:border-primary/30 transition-colors group"
+                    className="rounded-2xl border border-gray-200 bg-gray-50 p-4 md:p-5 hover:border-primary/30 transition-colors group"
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="space-y-3 min-w-0 flex-1">
