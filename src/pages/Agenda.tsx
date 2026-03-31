@@ -333,7 +333,7 @@ const Agenda = () => {
             />
           </div>
 
-          <div className="glass rounded-[28px] p-4 md:p-6 card-shadow border border-border/40 min-h-[420px]">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40 min-h-[420px]">
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => <div key={i} className="h-24 animate-pulse bg-muted/20 rounded-2xl" />)}
