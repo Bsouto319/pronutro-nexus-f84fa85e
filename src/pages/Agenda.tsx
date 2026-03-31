@@ -270,8 +270,8 @@ const Agenda = () => {
             </div>
             <div className="space-y-2">
               <div>
-                <h2 className="text-3xl font-display font-bold text-foreground">Agenda</h2>
-                <p className="text-sm text-muted-foreground">Calendário completo do mês com foco no dia selecionado.</p>
+                <h2 className="text-3xl font-display font-bold text-gray-900">Agenda</h2>
+                <p className="text-sm text-gray-500">Calendário completo do mês com foco no dia selecionado.</p>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <button onClick={() => changeMonth(-1)} className="hover:text-primary transition-colors"><ChevronLeft className="w-4 h-4" /></button>
