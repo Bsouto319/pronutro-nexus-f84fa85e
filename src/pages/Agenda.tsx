@@ -308,7 +308,7 @@ const Agenda = () => {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <div className="rounded-[28px] p-4 md:p-6 bg-white shadow-sm border border-gray-200">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40">
             <Calendar
               mode="single"
               month={visibleMonth}
