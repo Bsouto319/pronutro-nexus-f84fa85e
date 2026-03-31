@@ -16,6 +16,8 @@ import Integracoes from "./pages/Integracoes";
 import Configuracoes from "./pages/Configuracoes";
 import Kanban from "./pages/Kanban";
 import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
+import AdminLP from "./pages/AdminLP";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
           <OrganizationProvider>
             <div>
               <Routes>
+                <Route path="/landing" element={<Landing />} />
+                <Route path="/admin" element={<AdminLP />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
