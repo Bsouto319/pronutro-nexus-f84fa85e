@@ -262,7 +262,7 @@ const Agenda = () => {
   return (
     <AppLayout>
       <TopBar title="Agenda Médica" subtitle="Visão mensal completa para acompanhar todo o mês" onRefresh={() => refetch()} />
-      <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto" style={{ colorScheme: 'light' }}>
+      <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -270,12 +270,12 @@ const Agenda = () => {
             </div>
             <div className="space-y-2">
               <div>
-                <h2 className="text-3xl font-display font-bold text-gray-900">Agenda</h2>
-                <p className="text-sm text-gray-500">Calendário completo do mês com foco no dia selecionado.</p>
+                <h2 className="text-3xl font-display font-bold text-foreground">Agenda</h2>
+                <p className="text-sm text-muted-foreground">Calendário completo do mês com foco no dia selecionado.</p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <button onClick={() => changeMonth(-1)} className="hover:text-primary transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                <span className="font-medium text-gray-900 capitalize">{visibleMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
+                <span className="font-medium text-foreground capitalize">{visibleMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
                 <button onClick={() => changeMonth(1)} className="hover:text-primary transition-colors"><ChevronRight className="w-4 h-4" /></button>
               </div>
             </div>
@@ -289,26 +289,26 @@ const Agenda = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Selecionado</p>
-            <p className="text-lg font-display font-bold text-gray-900 mt-2 capitalize">{formatDateBR(selectedDate)}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Selecionado</p>
+            <p className="text-lg font-display font-bold text-foreground mt-2 capitalize">{formatDateBR(selectedDate)}</p>
           </div>
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Total do dia</p>
-            <p className="text-2xl font-display font-bold text-gray-900 mt-2">{dayAppointments.length}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Total do dia</p>
+            <p className="text-2xl font-display font-bold text-foreground mt-2">{dayAppointments.length}</p>
           </div>
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Confirmados</p>
-            <p className="text-2xl font-display font-bold text-emerald-600 mt-2">{confirmedCount}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Confirmados</p>
+            <p className="text-2xl font-display font-bold text-success mt-2">{confirmedCount}</p>
           </div>
-          <div className="rounded-2xl p-4 bg-white border border-gray-200 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Pendentes</p>
-            <p className="text-2xl font-display font-bold text-amber-500 mt-2">{pendingCount}</p>
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Pendentes</p>
+            <p className="text-2xl font-display font-bold text-warning mt-2">{pendingCount}</p>
           </div>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <div className="rounded-[28px] p-4 md:p-6 bg-white shadow-sm border border-gray-200">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40">
             <Calendar
               mode="single"
               month={visibleMonth}
@@ -324,16 +324,16 @@ const Agenda = () => {
                 table: "w-full border-collapse",
                 head_row: "grid grid-cols-7",
                 row: "grid grid-cols-7 mt-2",
-                head_cell: "h-10 w-full text-center text-xs font-semibold text-gray-500",
+                head_cell: "h-10 w-full text-center text-xs font-semibold text-muted-foreground",
                 cell: "h-14 w-full p-1 text-center",
-                day: cn("h-12 w-12 rounded-2xl text-sm font-medium mx-auto text-gray-800 hover:bg-gray-100"),
-                day_selected: "!bg-primary !text-white hover:!bg-primary focus:!bg-primary",
-                day_today: "bg-amber-100 text-amber-900",
+                day: cn("h-12 w-12 rounded-2xl text-sm font-medium mx-auto text-foreground hover:bg-muted"),
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary",
+                day_today: "bg-accent text-accent-foreground",
               }}
             />
           </div>
 
-          <div className="rounded-[28px] p-4 md:p-6 bg-white shadow-sm border border-gray-200 min-h-[420px]">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40 min-h-[420px]">
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => <div key={i} className="h-24 animate-pulse bg-muted/20 rounded-2xl" />)}
@@ -357,7 +357,7 @@ const Agenda = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
-                    className="rounded-2xl border border-gray-200 bg-gray-50 p-4 md:p-5 hover:border-primary/30 transition-colors group"
+                    className="rounded-2xl border border-border/40 bg-secondary/50 p-4 md:p-5 hover:border-primary/30 transition-colors group"
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="space-y-3 min-w-0 flex-1">
@@ -370,14 +370,14 @@ const Agenda = () => {
                           )}
                         </div>
                         <div>
-                          <p className="text-lg font-display font-bold text-gray-900">{appointment.patient_name}</p>
-                          <div className="mt-2 flex flex-col gap-2 text-sm text-gray-500 md:flex-row md:flex-wrap md:items-center md:gap-4">
+                          <p className="text-lg font-display font-bold text-foreground">{appointment.patient_name}</p>
+                          <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:flex-wrap md:items-center md:gap-4">
                             <span className="inline-flex items-center gap-2"><UserRound className="w-4 h-4" /> Paciente</span>
                             {appointment.doctor_name && <span className="inline-flex items-center gap-2"><Stethoscope className="w-4 h-4" /> Dr(a). {appointment.doctor_name}</span>}
                             <span className="inline-flex items-center gap-2"><Clock3 className="w-4 h-4" /> {appointment.time || "Sem horário"}</span>
                           </div>
                         </div>
-                        {appointment.notes && <p className="text-sm text-gray-500 leading-relaxed">{appointment.notes}</p>}
+                        {appointment.notes && <p className="text-sm text-muted-foreground leading-relaxed">{appointment.notes}</p>}
                       </div>
                       <div className="flex gap-2 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
                         <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => openEdit(appointment)}>
