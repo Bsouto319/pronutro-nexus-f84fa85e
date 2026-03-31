@@ -317,7 +317,7 @@ const Agenda = () => {
               onSelect={(date) => date && setSelectedDate(date)}
               modifiers={{ booked: bookedDays }}
               modifiersClassNames={{ booked: "relative after:absolute after:bottom-1.5 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-primary" }}
-              className="w-full rounded-2xl bg-background/40"
+              className="w-full rounded-2xl"
               classNames={{
                 months: "flex w-full",
                 month: "w-full space-y-4",
