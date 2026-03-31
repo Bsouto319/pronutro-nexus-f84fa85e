@@ -289,26 +289,26 @@ const Agenda = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Selecionado</p>
             <p className="text-lg font-display font-bold text-foreground mt-2 capitalize">{formatDateBR(selectedDate)}</p>
           </div>
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Total do dia</p>
             <p className="text-2xl font-display font-bold text-foreground mt-2">{dayAppointments.length}</p>
           </div>
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Confirmados</p>
             <p className="text-2xl font-display font-bold text-success mt-2">{confirmedCount}</p>
           </div>
-          <div className="glass rounded-2xl p-4 border border-border/40">
+          <div className="rounded-2xl p-4 bg-card border border-border/40 shadow-sm">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Pendentes</p>
             <p className="text-2xl font-display font-bold text-warning mt-2">{pendingCount}</p>
           </div>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <div className="glass rounded-[28px] p-4 md:p-6 card-shadow border border-border/40">
+          <div className="rounded-[28px] p-4 md:p-6 bg-card shadow-sm border border-border/40">
             <Calendar
               mode="single"
               month={visibleMonth}
