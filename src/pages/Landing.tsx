@@ -321,11 +321,11 @@ export default function Landing() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(13,147,115,0.2)_0%,_transparent_60%)]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-6">
-            Pronto para sua clínica{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9373] to-[#00F5A0]">nunca mais perder um paciente?</span>
+            Pronto para seu negócio{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9373] to-[#00F5A0]">nunca mais perder um cliente?</span>
           </h2>
-          <p className="text-lg text-[#C8D6CF] mb-4">Valores sob consulta — cada clínica tem necessidades únicas.</p>
-          <p className="text-sm text-[#8DCCB8] mb-8">Fale com nosso especialista e descubra como o ProNutro pode transformar seu atendimento.</p>
+          <p className="text-lg text-[#C8D6CF] mb-4">Valores sob consulta — cada negócio tem necessidades únicas.</p>
+          <p className="text-sm text-[#8DCCB8] mb-8">Fale com nosso especialista e descubra como o Atendent-AI pode transformar seu atendimento.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
               <Button className="w-full sm:w-auto bg-gradient-to-r from-[#0D9373] to-[#00F5A0] text-[#0A0F0D] font-bold text-lg px-10 py-7 rounded-full hover:shadow-xl hover:shadow-[#00F5A0]/20 transition-all">
