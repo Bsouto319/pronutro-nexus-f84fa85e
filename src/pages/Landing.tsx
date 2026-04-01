@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const WHATSAPP_LINK = "https://wa.me/5561982025951?text=Ol%C3%A1!%20Vi%20o%20ProNutro%20e%20quero%20saber%20mais%20sobre%20o%20atendente%20IA%20para%20minha%20cl%C3%ADnica.";
+const WHATSAPP_LINK = "https://wa.me/5561982025951?text=Ol%C3%A1!%20Vi%20o%20Atendent-AI%20e%20quero%20saber%20mais%20sobre%20o%20atendente%20IA%20para%20meu%20neg%C3%B3cio.";
 
 function AnimatedSection({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
   const ref = useRef(null);
