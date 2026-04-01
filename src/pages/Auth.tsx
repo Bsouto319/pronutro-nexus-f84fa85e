@@ -58,7 +58,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">ProNutro</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Atendent-AI</CardTitle>
           <CardDescription>
             {isLogin ? "Entre na sua conta" : "Crie uma nova conta"}
           </CardDescription>

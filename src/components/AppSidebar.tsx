@@ -91,7 +91,7 @@ export function AppSidebar() {
                   className="flex flex-col"
                 >
                   <span className="font-display font-bold text-sidebar-accent-foreground text-sm leading-tight">
-                    ProNutro
+                    Atendent-AI
                   </span>
                   <span className="text-[10px] text-sidebar-foreground leading-tight">Nexus CRM</span>
                 </motion.div>
