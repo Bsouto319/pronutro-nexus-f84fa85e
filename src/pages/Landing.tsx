@@ -100,7 +100,7 @@ export default function Landing() {
               <Brain className="w-5 h-5 text-[#0A0F0D]" />
             </div>
             <span className="text-xl font-bold font-['Plus_Jakarta_Sans',sans-serif] tracking-tight">
-              Pro<span className="text-[#00F5A0]">Nutro</span>
+              Atendent<span className="text-[#00F5A0]">-AI</span>
             </span>
           </div>
           <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
