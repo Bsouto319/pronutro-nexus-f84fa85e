@@ -220,7 +220,7 @@ export default function Landing() {
               { icon: Bell, title: "Lembretes inteligentes", desc: "Reduz faltas com lembretes automáticos antes da consulta." },
               { icon: Monitor, title: "Dashboard em tempo real", desc: "Veja leads, agendamentos e conversas num painel web." },
               { icon: Users, title: "Handoff para humano", desc: "Transfere para a recepcionista quando necessário." },
-              { icon: Shield, title: "Personalização total", desc: "Com o nome, tom e identidade visual da sua clínica." },
+              { icon: Shield, title: "White-Label total", desc: "Com o nome, tom e identidade visual do SEU negócio." },
             ].map((item, i) => (
               <div key={i} className="bg-[#0F1A15] border border-[#1a2f25] rounded-2xl p-6 text-left group hover:border-[#00F5A0]/30 transition-all hover:shadow-lg hover:shadow-[#00F5A0]/5">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0D9373]/20 to-[#00F5A0]/10 flex items-center justify-center mb-4 group-hover:from-[#0D9373]/30 group-hover:to-[#00F5A0]/20 transition-colors">
