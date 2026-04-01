@@ -75,7 +75,7 @@ export default function AdminLP() {
               <Brain className="w-6 h-6 text-[#0A0F0D]" />
             </div>
             <span className="text-2xl font-bold text-white font-['Plus_Jakarta_Sans',sans-serif]">
-              Pro<span className="text-[#00F5A0]">Nutro</span> Admin
+              Atendent<span className="text-[#00F5A0]">-AI</span> Admin
             </span>
           </div>
           <Input
