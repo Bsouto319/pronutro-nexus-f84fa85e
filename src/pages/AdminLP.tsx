@@ -94,9 +94,9 @@ export default function AdminLP() {
   }
 
   const socialLinks = [
-    { name: "Instagram Bio", text: `🤖 Sua clínica atendendo 24h no WhatsApp com IA\n👇 Saiba mais:\n${LP_URL}` },
-    { name: "Facebook", text: `Conheça o ProNutro — atendente IA para clínicas de nutrição e saúde. Sua clínica nunca mais perde um paciente! ${LP_URL}` },
-    { name: "TikTok Bio", text: `Automação com IA para clínicas 🏥🤖\n${LP_URL}` },
+    { name: "Instagram Bio", text: `🤖 Seu negócio atendendo 24h no WhatsApp com IA\n👇 Saiba mais:\n${LP_URL}` },
+    { name: "Facebook", text: `Conheça o Atendent-AI — atendente IA para clínicas, salões e consultórios. Nunca mais perca um cliente! ${LP_URL}` },
+    { name: "TikTok Bio", text: `Automação com IA para seu negócio 🤖✨\n${LP_URL}` },
   ];
 
   return (

@@ -347,7 +347,7 @@ export default function Landing() {
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#0D9373] to-[#00F5A0] flex items-center justify-center">
                 <Brain className="w-4 h-4 text-[#0A0F0D]" />
               </div>
-              <span className="font-bold font-['Plus_Jakarta_Sans',sans-serif]">Pro<span className="text-[#00F5A0]">Nutro</span></span>
+              <span className="font-bold font-['Plus_Jakarta_Sans',sans-serif]">Atendent<span className="text-[#00F5A0]">-AI</span></span>
             </div>
             <div className="flex items-center gap-6 text-sm text-[#8DCCB8]">
               <span>brunosouto1108@gmail.com</span>
