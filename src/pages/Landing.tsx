@@ -210,9 +210,9 @@ export default function Landing() {
       <AnimatedSection className="py-20 bg-[#080C0A]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-4">
-            Tudo que sua clínica <span className="text-[#00F5A0]">precisa</span>
+            Tudo que seu negócio <span className="text-[#00F5A0]">precisa</span>
           </h2>
-          <p className="text-[#C8D6CF] mb-12 max-w-2xl mx-auto">Funcionalidades pensadas para clínicas que querem crescer sem aumentar a equipe.</p>
+          <p className="text-[#C8D6CF] mb-12 max-w-2xl mx-auto">Funcionalidades pensadas para quem quer crescer sem aumentar a equipe. Clínica, salão, consultório — a gente adapta!</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Brain, title: "IA 24 horas", desc: "Atendimento automático que nunca tira folga, feriado ou férias." },
