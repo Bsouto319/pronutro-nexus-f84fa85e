@@ -160,9 +160,9 @@ export default function Landing() {
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: UserX, title: "Recepcionista sobrecarregada", desc: "Não consegue responder todos a tempo" },
-              { icon: Clock, title: "Mensagens fora do horário", desc: "Pacientes sem resposta à noite e fins de semana" },
-              { icon: XCircle, title: "Faltas por falta de lembrete", desc: "Consultas perdidas que custam dinheiro" },
+              { icon: UserX, title: "Equipe sobrecarregada", desc: "Não consegue responder todos a tempo" },
+              { icon: Clock, title: "Mensagens fora do horário", desc: "Clientes sem resposta à noite e fins de semana" },
+              { icon: XCircle, title: "Faltas por falta de lembrete", desc: "Agendamentos perdidos que custam dinheiro" },
               { icon: Users, title: "Perdendo para a concorrência", desc: "Quem responde primeiro, agenda primeiro" },
             ].map((item, i) => (
               <div key={i} className="bg-[#0F1A15] border border-[#1a2f25] rounded-2xl p-6 text-left hover:border-[#0D9373]/50 transition-colors">
