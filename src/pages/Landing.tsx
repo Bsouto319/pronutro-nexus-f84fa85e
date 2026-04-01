@@ -299,7 +299,7 @@ export default function Landing() {
           <div className="bg-[#0F1A15] border border-[#1a2f25] rounded-2xl p-8 sm:p-12">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0D9373] to-[#00F5A0] flex items-center justify-center text-[#0A0F0D] text-2xl font-bold mx-auto mb-6">BS</div>
             <blockquote className="text-lg sm:text-xl text-[#C8D6CF] italic mb-6 max-w-2xl mx-auto">
-              "Construí o ProNutro porque vi clínicas perdendo pacientes por não conseguirem responder a tempo. A IA resolve isso — atende, agenda e confirma, 24 horas."
+              "Construí o Atendent-AI porque vi negócios perdendo clientes por não conseguirem responder a tempo. A IA resolve isso — atende, agenda e confirma, 24 horas. Clínica, salão, consultório — a gente personaliza pra você."
             </blockquote>
             <p className="font-bold text-white text-lg">Bruno Souto</p>
             <p className="text-sm text-[#8DCCB8]">Especialista em automação com IA para negócios de saúde — Brasília/DF</p>
