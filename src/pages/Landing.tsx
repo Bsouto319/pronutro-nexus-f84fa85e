@@ -153,10 +153,10 @@ export default function Landing() {
       <AnimatedSection className="py-20 bg-[#080C0A]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-4">
-            Isso acontece na <span className="text-[#00F5A0]">sua clínica?</span>
+            Isso acontece no <span className="text-[#00F5A0]">seu negócio?</span>
           </h2>
           <p className="text-[#C8D6CF] mb-12 max-w-2xl mx-auto">
-            A maioria das clínicas perde pacientes todos os dias por problemas simples de atendimento.
+            A maioria dos negócios perde clientes todos os dias por problemas simples de atendimento.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
