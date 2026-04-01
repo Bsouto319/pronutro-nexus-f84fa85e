@@ -75,7 +75,7 @@ export default function AdminLP() {
               <Brain className="w-6 h-6 text-[#0A0F0D]" />
             </div>
             <span className="text-2xl font-bold text-white font-['Plus_Jakarta_Sans',sans-serif]">
-              Pro<span className="text-[#00F5A0]">Nutro</span> Admin
+              Atendent<span className="text-[#00F5A0]">-AI</span> Admin
             </span>
           </div>
           <Input
@@ -94,9 +94,9 @@ export default function AdminLP() {
   }
 
   const socialLinks = [
-    { name: "Instagram Bio", text: `🤖 Sua clínica atendendo 24h no WhatsApp com IA\n👇 Saiba mais:\n${LP_URL}` },
-    { name: "Facebook", text: `Conheça o ProNutro — atendente IA para clínicas de nutrição e saúde. Sua clínica nunca mais perde um paciente! ${LP_URL}` },
-    { name: "TikTok Bio", text: `Automação com IA para clínicas 🏥🤖\n${LP_URL}` },
+    { name: "Instagram Bio", text: `🤖 Seu negócio atendendo 24h no WhatsApp com IA\n👇 Saiba mais:\n${LP_URL}` },
+    { name: "Facebook", text: `Conheça o Atendent-AI — atendente IA para clínicas, salões e consultórios. Nunca mais perca um cliente! ${LP_URL}` },
+    { name: "TikTok Bio", text: `Automação com IA para seu negócio 🤖✨\n${LP_URL}` },
   ];
 
   return (
@@ -108,7 +108,7 @@ export default function AdminLP() {
               <Brain className="w-5 h-5 text-[#0A0F0D]" />
             </div>
             <span className="text-xl font-bold font-['Plus_Jakarta_Sans',sans-serif]">
-              Pro<span className="text-[#00F5A0]">Nutro</span> Admin
+              Atendent<span className="text-[#00F5A0]">-AI</span> Admin
             </span>
           </div>
           <div className="flex gap-2">

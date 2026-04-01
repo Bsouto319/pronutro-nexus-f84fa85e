@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const WHATSAPP_LINK = "https://wa.me/5561982025951?text=Ol%C3%A1!%20Vi%20o%20ProNutro%20e%20quero%20saber%20mais%20sobre%20o%20atendente%20IA%20para%20minha%20cl%C3%ADnica.";
+const WHATSAPP_LINK = "https://wa.me/5561982025951?text=Ol%C3%A1!%20Vi%20o%20Atendent-AI%20e%20quero%20saber%20mais%20sobre%20o%20atendente%20IA%20para%20meu%20neg%C3%B3cio.";
 
 function AnimatedSection({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
   const ref = useRef(null);
@@ -100,7 +100,7 @@ export default function Landing() {
               <Brain className="w-5 h-5 text-[#0A0F0D]" />
             </div>
             <span className="text-xl font-bold font-['Plus_Jakarta_Sans',sans-serif] tracking-tight">
-              Pro<span className="text-[#00F5A0]">Nutro</span>
+              Atendent<span className="text-[#00F5A0]">-AI</span>
             </span>
           </div>
           <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
@@ -117,17 +117,17 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <span className="inline-flex items-center gap-2 bg-[#0D9373]/20 text-[#00F5A0] text-sm font-medium px-4 py-1.5 rounded-full border border-[#0D9373]/30 mb-6">
-                <Zap className="w-4 h-4" /> Automação com IA para Clínicas
+               <span className="inline-flex items-center gap-2 bg-[#0D9373]/20 text-[#00F5A0] text-sm font-medium px-4 py-1.5 rounded-full border border-[#0D9373]/30 mb-6">
+                <Zap className="w-4 h-4" /> Automação com IA • White-Label para seu negócio
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] leading-[1.1] mb-6">
-                Sua clínica atendendo e agendando no WhatsApp{" "}
+                Sua clínica, salão ou consultório atendendo no WhatsApp{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9373] to-[#00F5A0]">
                   — mesmo enquanto você dorme
                 </span>
               </h1>
               <p className="text-lg text-[#C8D6CF] mb-8 max-w-xl">
-                Atendente virtual com IA que responde, agenda e confirma consultas 24h pelo WhatsApp da sua clínica.
+                Atendente virtual com IA que responde, agenda e confirma 24h pelo WhatsApp do seu negócio. Personalizamos para qualquer segmento.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
@@ -153,16 +153,16 @@ export default function Landing() {
       <AnimatedSection className="py-20 bg-[#080C0A]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-4">
-            Isso acontece na <span className="text-[#00F5A0]">sua clínica?</span>
+            Isso acontece no <span className="text-[#00F5A0]">seu negócio?</span>
           </h2>
           <p className="text-[#C8D6CF] mb-12 max-w-2xl mx-auto">
-            A maioria das clínicas perde pacientes todos os dias por problemas simples de atendimento.
+            A maioria dos negócios perde clientes todos os dias por problemas simples de atendimento.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: UserX, title: "Recepcionista sobrecarregada", desc: "Não consegue responder todos a tempo" },
-              { icon: Clock, title: "Mensagens fora do horário", desc: "Pacientes sem resposta à noite e fins de semana" },
-              { icon: XCircle, title: "Faltas por falta de lembrete", desc: "Consultas perdidas que custam dinheiro" },
+              { icon: UserX, title: "Equipe sobrecarregada", desc: "Não consegue responder todos a tempo" },
+              { icon: Clock, title: "Mensagens fora do horário", desc: "Clientes sem resposta à noite e fins de semana" },
+              { icon: XCircle, title: "Faltas por falta de lembrete", desc: "Agendamentos perdidos que custam dinheiro" },
               { icon: Users, title: "Perdendo para a concorrência", desc: "Quem responde primeiro, agenda primeiro" },
             ].map((item, i) => (
               <div key={i} className="bg-[#0F1A15] border border-[#1a2f25] rounded-2xl p-6 text-left hover:border-[#0D9373]/50 transition-colors">
@@ -183,11 +183,11 @@ export default function Landing() {
           <h2 className="text-3xl sm:text-4xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-4">
             Como <span className="text-[#00F5A0]">funciona?</span>
           </h2>
-          <p className="text-[#C8D6CF] mb-16 max-w-2xl mx-auto">Simples assim: 3 passos e sua clínica nunca mais perde um agendamento.</p>
+          <p className="text-[#C8D6CF] mb-16 max-w-2xl mx-auto">Simples assim: 3 passos e seu negócio nunca mais perde um agendamento.</p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: "01", icon: MessageSquare, title: "Paciente manda mensagem", desc: "No WhatsApp da sua clínica, como já faz hoje." },
-              { step: "02", icon: Brain, title: "IA responde e agenda", desc: "Atende, tira dúvidas e marca a consulta no Google Calendar." },
+              { step: "01", icon: MessageSquare, title: "Cliente manda mensagem", desc: "No WhatsApp do seu negócio, como já faz hoje." },
+              { step: "02", icon: Brain, title: "IA responde e agenda", desc: "Atende, tira dúvidas e marca no Google Calendar automaticamente." },
               { step: "03", icon: Monitor, title: "Você vê tudo no dashboard", desc: "Leads, agendamentos e conversas em tempo real." },
             ].map((item, i) => (
               <div key={i} className="relative">
@@ -210,9 +210,9 @@ export default function Landing() {
       <AnimatedSection className="py-20 bg-[#080C0A]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-4">
-            Tudo que sua clínica <span className="text-[#00F5A0]">precisa</span>
+            Tudo que seu negócio <span className="text-[#00F5A0]">precisa</span>
           </h2>
-          <p className="text-[#C8D6CF] mb-12 max-w-2xl mx-auto">Funcionalidades pensadas para clínicas que querem crescer sem aumentar a equipe.</p>
+          <p className="text-[#C8D6CF] mb-12 max-w-2xl mx-auto">Funcionalidades pensadas para quem quer crescer sem aumentar a equipe. Clínica, salão, consultório — a gente adapta!</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Brain, title: "IA 24 horas", desc: "Atendimento automático que nunca tira folga, feriado ou férias." },
@@ -220,7 +220,7 @@ export default function Landing() {
               { icon: Bell, title: "Lembretes inteligentes", desc: "Reduz faltas com lembretes automáticos antes da consulta." },
               { icon: Monitor, title: "Dashboard em tempo real", desc: "Veja leads, agendamentos e conversas num painel web." },
               { icon: Users, title: "Handoff para humano", desc: "Transfere para a recepcionista quando necessário." },
-              { icon: Shield, title: "Personalização total", desc: "Com o nome, tom e identidade visual da sua clínica." },
+              { icon: Shield, title: "White-Label total", desc: "Com o nome, tom e identidade visual do SEU negócio." },
             ].map((item, i) => (
               <div key={i} className="bg-[#0F1A15] border border-[#1a2f25] rounded-2xl p-6 text-left group hover:border-[#00F5A0]/30 transition-all hover:shadow-lg hover:shadow-[#00F5A0]/5">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0D9373]/20 to-[#00F5A0]/10 flex items-center justify-center mb-4 group-hover:from-[#0D9373]/30 group-hover:to-[#00F5A0]/20 transition-colors">
@@ -299,7 +299,7 @@ export default function Landing() {
           <div className="bg-[#0F1A15] border border-[#1a2f25] rounded-2xl p-8 sm:p-12">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0D9373] to-[#00F5A0] flex items-center justify-center text-[#0A0F0D] text-2xl font-bold mx-auto mb-6">BS</div>
             <blockquote className="text-lg sm:text-xl text-[#C8D6CF] italic mb-6 max-w-2xl mx-auto">
-              "Construí o ProNutro porque vi clínicas perdendo pacientes por não conseguirem responder a tempo. A IA resolve isso — atende, agenda e confirma, 24 horas."
+              "Construí o Atendent-AI porque vi negócios perdendo clientes por não conseguirem responder a tempo. A IA resolve isso — atende, agenda e confirma, 24 horas. Clínica, salão, consultório — a gente personaliza pra você."
             </blockquote>
             <p className="font-bold text-white text-lg">Bruno Souto</p>
             <p className="text-sm text-[#8DCCB8]">Especialista em automação com IA para negócios de saúde — Brasília/DF</p>
@@ -321,11 +321,11 @@ export default function Landing() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(13,147,115,0.2)_0%,_transparent_60%)]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-6">
-            Pronto para sua clínica{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9373] to-[#00F5A0]">nunca mais perder um paciente?</span>
+            Pronto para seu negócio{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9373] to-[#00F5A0]">nunca mais perder um cliente?</span>
           </h2>
-          <p className="text-lg text-[#C8D6CF] mb-4">Valores sob consulta — cada clínica tem necessidades únicas.</p>
-          <p className="text-sm text-[#8DCCB8] mb-8">Fale com nosso especialista e descubra como o ProNutro pode transformar seu atendimento.</p>
+          <p className="text-lg text-[#C8D6CF] mb-4">Valores sob consulta — cada negócio tem necessidades únicas.</p>
+          <p className="text-sm text-[#8DCCB8] mb-8">Fale com nosso especialista e descubra como o Atendent-AI pode transformar seu atendimento.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
               <Button className="w-full sm:w-auto bg-gradient-to-r from-[#0D9373] to-[#00F5A0] text-[#0A0F0D] font-bold text-lg px-10 py-7 rounded-full hover:shadow-xl hover:shadow-[#00F5A0]/20 transition-all">
@@ -347,7 +347,7 @@ export default function Landing() {
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#0D9373] to-[#00F5A0] flex items-center justify-center">
                 <Brain className="w-4 h-4 text-[#0A0F0D]" />
               </div>
-              <span className="font-bold font-['Plus_Jakarta_Sans',sans-serif]">Pro<span className="text-[#00F5A0]">Nutro</span></span>
+              <span className="font-bold font-['Plus_Jakarta_Sans',sans-serif]">Atendent<span className="text-[#00F5A0]">-AI</span></span>
             </div>
             <div className="flex items-center gap-6 text-sm text-[#8DCCB8]">
               <span>brunosouto1108@gmail.com</span>
