@@ -117,8 +117,8 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <span className="inline-flex items-center gap-2 bg-[#0D9373]/20 text-[#00F5A0] text-sm font-medium px-4 py-1.5 rounded-full border border-[#0D9373]/30 mb-6">
-                <Zap className="w-4 h-4" /> Automação com IA para Clínicas
+               <span className="inline-flex items-center gap-2 bg-[#0D9373]/20 text-[#00F5A0] text-sm font-medium px-4 py-1.5 rounded-full border border-[#0D9373]/30 mb-6">
+                <Zap className="w-4 h-4" /> Automação com IA • White-Label para seu negócio
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] leading-[1.1] mb-6">
                 Sua clínica, salão ou consultório atendendo no WhatsApp{" "}
