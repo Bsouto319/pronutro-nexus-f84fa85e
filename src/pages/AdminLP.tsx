@@ -108,7 +108,7 @@ export default function AdminLP() {
               <Brain className="w-5 h-5 text-[#0A0F0D]" />
             </div>
             <span className="text-xl font-bold font-['Plus_Jakarta_Sans',sans-serif]">
-              Pro<span className="text-[#00F5A0]">Nutro</span> Admin
+              Atendent<span className="text-[#00F5A0]">-AI</span> Admin
             </span>
           </div>
           <div className="flex gap-2">
