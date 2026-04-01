@@ -183,7 +183,7 @@ export default function Landing() {
           <h2 className="text-3xl sm:text-4xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] mb-4">
             Como <span className="text-[#00F5A0]">funciona?</span>
           </h2>
-          <p className="text-[#C8D6CF] mb-16 max-w-2xl mx-auto">Simples assim: 3 passos e sua clínica nunca mais perde um agendamento.</p>
+          <p className="text-[#C8D6CF] mb-16 max-w-2xl mx-auto">Simples assim: 3 passos e seu negócio nunca mais perde um agendamento.</p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { step: "01", icon: MessageSquare, title: "Paciente manda mensagem", desc: "No WhatsApp da sua clínica, como já faz hoje." },
