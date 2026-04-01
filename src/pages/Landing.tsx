@@ -121,13 +121,13 @@ export default function Landing() {
                 <Zap className="w-4 h-4" /> Automação com IA para Clínicas
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-['Plus_Jakarta_Sans',sans-serif] leading-[1.1] mb-6">
-                Sua clínica atendendo e agendando no WhatsApp{" "}
+                Sua clínica, salão ou consultório atendendo no WhatsApp{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9373] to-[#00F5A0]">
                   — mesmo enquanto você dorme
                 </span>
               </h1>
               <p className="text-lg text-[#C8D6CF] mb-8 max-w-xl">
-                Atendente virtual com IA que responde, agenda e confirma consultas 24h pelo WhatsApp da sua clínica.
+                Atendente virtual com IA que responde, agenda e confirma 24h pelo WhatsApp do seu negócio. Personalizamos para qualquer segmento.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
