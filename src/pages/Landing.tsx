@@ -186,8 +186,8 @@ export default function Landing() {
           <p className="text-[#C8D6CF] mb-16 max-w-2xl mx-auto">Simples assim: 3 passos e seu negócio nunca mais perde um agendamento.</p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: "01", icon: MessageSquare, title: "Paciente manda mensagem", desc: "No WhatsApp da sua clínica, como já faz hoje." },
-              { step: "02", icon: Brain, title: "IA responde e agenda", desc: "Atende, tira dúvidas e marca a consulta no Google Calendar." },
+              { step: "01", icon: MessageSquare, title: "Cliente manda mensagem", desc: "No WhatsApp do seu negócio, como já faz hoje." },
+              { step: "02", icon: Brain, title: "IA responde e agenda", desc: "Atende, tira dúvidas e marca no Google Calendar automaticamente." },
               { step: "03", icon: Monitor, title: "Você vê tudo no dashboard", desc: "Leads, agendamentos e conversas em tempo real." },
             ].map((item, i) => (
               <div key={i} className="relative">
