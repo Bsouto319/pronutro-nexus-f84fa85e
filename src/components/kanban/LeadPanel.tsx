@@ -78,11 +78,16 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
     toast.success(active ? "Bot ativado" : "Bot pausado");
   };
 
-  const handleTakeOver = async () => {
-    const newState = !humanTakeover;
-    setHumanTakeover(newState);
-    await takeOver(lead?.id || "", !newState);
-    toast.success(newState ? "Conversa assumida" : "Devolvida ao bot");
+  const handleTakeOver = () => {
+    if (!lead) return;
+    const phone = lead.phone?.replace(/\D/g, "") || "";
+    if (!phone) {
+      toast.error("Este lead não possui telefone cadastrado.");
+      return;
+    }
+    const msg = encodeURIComponent(`Olá ${lead.name}, tudo bem? Estou entrando em contato pela clínica.`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+    toast.success("WhatsApp aberto!");
   };
 
   const handleAddNote = async () => {
