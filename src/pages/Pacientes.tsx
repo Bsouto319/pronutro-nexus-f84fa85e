@@ -322,6 +322,12 @@ const Pacientes = () => {
         open={historyOpen}
         onOpenChange={setHistoryOpen}
       />
+      <EditPatientDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        patient={editPatient}
+        doctors={doctors}
+      />
     </AppLayout>
   );
 };

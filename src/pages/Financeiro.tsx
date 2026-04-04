@@ -21,6 +21,9 @@ const Financeiro = () => {
     <AppLayout>
       <TopBar title="Financeiro" subtitle="Controle financeiro completo da clínica" onRefresh={refetch} />
       <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
+        <div className="flex flex-wrap gap-3 items-center">
+          <AddTransactionDialog />
+        </div>
         <AICapture />
         <FinanceImport />
         <FinanceExport />
