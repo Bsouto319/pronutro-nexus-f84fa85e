@@ -8,6 +8,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
+import { EditPatientDialog } from "@/components/pacientes/EditPatientDialog";
+import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
