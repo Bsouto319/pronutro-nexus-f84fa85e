@@ -10,6 +10,7 @@ import { FinanceCharts } from "@/components/financeiro/FinanceCharts";
 import { TransactionsTable } from "@/components/financeiro/TransactionsTable";
 import { AICapture } from "@/components/financeiro/AICapture";
 import { FinanceExport } from "@/components/financeiro/FinanceExport";
+import { FinanceImport } from "@/components/financeiro/FinanceImport";
 import { useFinanceData } from "@/hooks/useFinanceData";
 
 const Financeiro = () => {
