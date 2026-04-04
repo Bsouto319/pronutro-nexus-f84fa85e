@@ -126,15 +126,11 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
           </div>
           <Button
             size="sm"
-            variant={humanTakeover ? "default" : "outline"}
-            className="w-full mt-2 text-xs h-8"
+            variant="outline"
+            className="w-full mt-2 text-xs h-8 border-green-500/30 text-green-600 hover:bg-green-500/10"
             onClick={handleTakeOver}
           >
-            {humanTakeover ? (
-              <><Bot className="w-3.5 h-3.5 mr-1.5" /> Devolver ao Bot</>
-            ) : (
-              <><UserRound className="w-3.5 h-3.5 mr-1.5" /> Assumir Conversa</>
-            )}
+            <Phone className="w-3.5 h-3.5 mr-1.5" /> Abrir no WhatsApp
           </Button>
         </SheetHeader>
 
