@@ -11,6 +11,7 @@ import { TransactionsTable } from "@/components/financeiro/TransactionsTable";
 import { AICapture } from "@/components/financeiro/AICapture";
 import { FinanceExport } from "@/components/financeiro/FinanceExport";
 import { FinanceImport } from "@/components/financeiro/FinanceImport";
+import { AddTransactionDialog } from "@/components/financeiro/AddTransactionDialog";
 import { useFinanceData } from "@/hooks/useFinanceData";
 
 const Financeiro = () => {
