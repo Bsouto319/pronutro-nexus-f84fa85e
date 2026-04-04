@@ -139,30 +139,45 @@ export type Database = {
       }
       clinic_patients: {
         Row: {
+          birth_date: string | null
+          cpf: string | null
           created_at: string
           doctor_id: string | null
+          email: string | null
           id: string
           name: string
           organization_id: string
           payment_method: string | null
+          phone: string | null
+          referral: string | null
           total: number
         }
         Insert: {
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           doctor_id?: string | null
+          email?: string | null
           id?: string
           name: string
           organization_id: string
           payment_method?: string | null
+          phone?: string | null
+          referral?: string | null
           total?: number
         }
         Update: {
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           doctor_id?: string | null
+          email?: string | null
           id?: string
           name?: string
           organization_id?: string
           payment_method?: string | null
+          phone?: string | null
+          referral?: string | null
           total?: number
         }
         Relationships: [
