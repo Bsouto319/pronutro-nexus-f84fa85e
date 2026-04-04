@@ -25,6 +25,8 @@ const Pacientes = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<typeof patients[0] | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [editPatient, setEditPatient] = useState<typeof patients[0] | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const filteredPatients = patients.filter(p =>
