@@ -78,11 +78,16 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
     toast.success(active ? "Bot ativado" : "Bot pausado");
   };
 
-  const handleTakeOver = async () => {
-    const newState = !humanTakeover;
-    setHumanTakeover(newState);
-    await takeOver(lead?.id || "", !newState);
-    toast.success(newState ? "Conversa assumida" : "Devolvida ao bot");
+  const handleTakeOver = () => {
+    if (!lead) return;
+    const phone = lead.phone?.replace(/\D/g, "") || "";
+    if (!phone) {
+      toast.error("Este lead não possui telefone cadastrado.");
+      return;
+    }
+    const msg = encodeURIComponent(`Olá ${lead.name}, tudo bem? Estou entrando em contato pela clínica.`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+    toast.success("WhatsApp aberto!");
   };
 
   const handleAddNote = async () => {
@@ -121,15 +126,11 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
           </div>
           <Button
             size="sm"
-            variant={humanTakeover ? "default" : "outline"}
-            className="w-full mt-2 text-xs h-8"
+            variant="outline"
+            className="w-full mt-2 text-xs h-8 border-green-500/30 text-green-600 hover:bg-green-500/10"
             onClick={handleTakeOver}
           >
-            {humanTakeover ? (
-              <><Bot className="w-3.5 h-3.5 mr-1.5" /> Devolver ao Bot</>
-            ) : (
-              <><UserRound className="w-3.5 h-3.5 mr-1.5" /> Assumir Conversa</>
-            )}
+            <Phone className="w-3.5 h-3.5 mr-1.5" /> Abrir no WhatsApp
           </Button>
         </SheetHeader>
 

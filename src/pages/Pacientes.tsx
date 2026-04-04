@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
-import { Users, Search, Plus, Filter, Trash2, User, Phone, CreditCard } from "lucide-react";
+import { Users, Search, Plus, Filter, Trash2, User, Phone, CreditCard, Mail, Calendar, FileText, UserCheck } from "lucide-react";
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,10 @@ const Pacientes = () => {
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const phone = formData.get("phone") as string;
+    const email = formData.get("email") as string;
+    const cpf = formData.get("cpf") as string;
+    const birthDate = formData.get("birthDate") as string;
+    const referral = formData.get("referral") as string;
     const payment = formData.get("payment") as string;
     const doctorId = formData.get("doctorId") as string;
 
@@ -62,6 +66,11 @@ const Pacientes = () => {
         .from("clinic_patients")
         .insert([{
           name,
+          phone: phone || null,
+          email: email || null,
+          cpf: cpf || null,
+          birth_date: birthDate || null,
+          referral: referral || null,
           payment_method: payment,
           doctor_id: doctorId || null,
           organization_id: orgMember.organization_id
@@ -121,7 +130,7 @@ const Pacientes = () => {
                 Novo Paciente
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass border-primary/20 sm:max-w-[500px]">
+            <DialogContent className="glass border-primary/20 sm:max-w-[550px]">
               <DialogHeader>
                 <DialogTitle className="text-xl font-display font-bold">Cadastrar Novo Paciente</DialogTitle>
                 <DialogDescription>
@@ -141,7 +150,35 @@ const Pacientes = () => {
                     <Label htmlFor="phone">Telefone / WhatsApp</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input id="phone" name="phone" placeholder="(00) 00000-0000" className="pl-10 glass" required />
+                      <Input id="phone" name="phone" placeholder="(00) 00000-0000" className="pl-10 glass" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">E-mail</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input id="email" name="email" type="email" placeholder="email@exemplo.com" className="pl-10 glass" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf">CPF</Label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input id="cpf" name="cpf" placeholder="000.000.000-00" className="pl-10 glass" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="birthDate">Data de Nascimento</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input id="birthDate" name="birthDate" type="date" className="pl-10 glass" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="referral">Indicação</Label>
+                    <div className="relative">
+                      <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input id="referral" name="referral" placeholder="Quem indicou?" className="pl-10 glass" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -207,20 +244,21 @@ const Pacientes = () => {
               <thead>
                 <tr className="bg-muted/30 border-b border-border/50">
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Paciente</th>
-                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Médico Responsável</th>
-                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Método de Pgto</th>
-                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Investido</th>
+                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Telefone</th>
+                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Médico</th>
+                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pgto</th>
+                  <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</th>
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando pacientes...</td>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">Carregando pacientes...</td>
                   </tr>
                 ) : filteredPatients.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum paciente encontrado.</td>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum paciente encontrado.</td>
                   </tr>
                 ) : (
                   filteredPatients.map((patient, i) => (
@@ -231,9 +269,13 @@ const Pacientes = () => {
                       transition={{ delay: i * 0.03 }}
                       className="hover:bg-muted/20 transition-colors group"
                     >
-                      <td className="p-4 font-medium text-foreground">{patient.name}</td>
+                      <td className="p-4">
+                        <p className="font-medium text-foreground">{patient.name}</p>
+                        {(patient as any).email && <p className="text-xs text-muted-foreground">{(patient as any).email}</p>}
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground font-mono">{(patient as any).phone || "—"}</td>
                       <td className="p-4 text-sm text-muted-foreground">{getDoctorName(patient.doctor_id)}</td>
-                      <td className="p-4 text-sm text-muted-foreground">
+                      <td className="p-4 text-sm">
                         <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase ring-1 ring-primary/20">
                           {patient.payment_method || "N/A"}
                         </span>
@@ -246,7 +288,7 @@ const Pacientes = () => {
                           <button
                             onClick={() => { setSelectedPatient(patient); setHistoryOpen(true); }}
                             className="text-primary hover:text-primary/80 transition-colors text-xs font-medium"
-                          >Ver</button>
+                          >Prontuário</button>
                           <button
                             onClick={() => handleDeletePatient(patient.id)}
                             className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-md hover:bg-destructive/10"
