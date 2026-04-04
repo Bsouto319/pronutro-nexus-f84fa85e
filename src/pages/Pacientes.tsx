@@ -8,6 +8,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
+import { EditPatientDialog } from "@/components/pacientes/EditPatientDialog";
+import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +25,8 @@ const Pacientes = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<typeof patients[0] | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [editPatient, setEditPatient] = useState<typeof patients[0] | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const filteredPatients = patients.filter(p =>
@@ -286,6 +290,13 @@ const Pacientes = () => {
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => { setEditPatient(patient); setEditOpen(true); }}
+                            className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
+                            title="Editar"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => { setSelectedPatient(patient); setHistoryOpen(true); }}
                             className="text-primary hover:text-primary/80 transition-colors text-xs font-medium"
                           >Prontuário</button>
@@ -310,6 +321,12 @@ const Pacientes = () => {
         doctors={doctors}
         open={historyOpen}
         onOpenChange={setHistoryOpen}
+      />
+      <EditPatientDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        patient={editPatient}
+        doctors={doctors}
       />
     </AppLayout>
   );

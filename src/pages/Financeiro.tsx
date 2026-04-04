@@ -11,6 +11,7 @@ import { TransactionsTable } from "@/components/financeiro/TransactionsTable";
 import { AICapture } from "@/components/financeiro/AICapture";
 import { FinanceExport } from "@/components/financeiro/FinanceExport";
 import { FinanceImport } from "@/components/financeiro/FinanceImport";
+import { AddTransactionDialog } from "@/components/financeiro/AddTransactionDialog";
 import { useFinanceData } from "@/hooks/useFinanceData";
 
 const Financeiro = () => {
@@ -20,6 +21,9 @@ const Financeiro = () => {
     <AppLayout>
       <TopBar title="Financeiro" subtitle="Controle financeiro completo da clínica" onRefresh={refetch} />
       <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
+        <div className="flex flex-wrap gap-3 items-center">
+          <AddTransactionDialog />
+        </div>
         <AICapture />
         <FinanceImport />
         <FinanceExport />
