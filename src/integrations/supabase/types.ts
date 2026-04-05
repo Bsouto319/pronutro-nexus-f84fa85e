@@ -101,31 +101,55 @@ export type Database = {
       }
       clinic_doctors: {
         Row: {
+          bio: string | null
+          commission_percent: number | null
           created_at: string
+          crm: string | null
+          email: string | null
           id: string
           name: string
+          notes: string | null
           organization_id: string
           patients_count: number
+          phone: string | null
           revenue: number
           specialty: string | null
+          working_days: string | null
+          working_hours: string | null
         }
         Insert: {
+          bio?: string | null
+          commission_percent?: number | null
           created_at?: string
+          crm?: string | null
+          email?: string | null
           id?: string
           name: string
+          notes?: string | null
           organization_id: string
           patients_count?: number
+          phone?: string | null
           revenue?: number
           specialty?: string | null
+          working_days?: string | null
+          working_hours?: string | null
         }
         Update: {
+          bio?: string | null
+          commission_percent?: number | null
           created_at?: string
+          crm?: string | null
+          email?: string | null
           id?: string
           name?: string
+          notes?: string | null
           organization_id?: string
           patients_count?: number
+          phone?: string | null
           revenue?: number
           specialty?: string | null
+          working_days?: string | null
+          working_hours?: string | null
         }
         Relationships: [
           {
@@ -149,6 +173,7 @@ export type Database = {
           organization_id: string
           payment_method: string | null
           phone: string | null
+          pre_notes: string | null
           referral: string | null
           total: number
         }
@@ -163,6 +188,7 @@ export type Database = {
           organization_id: string
           payment_method?: string | null
           phone?: string | null
+          pre_notes?: string | null
           referral?: string | null
           total?: number
         }
@@ -177,6 +203,7 @@ export type Database = {
           organization_id?: string
           payment_method?: string | null
           phone?: string | null
+          pre_notes?: string | null
           referral?: string | null
           total?: number
         }
@@ -255,6 +282,57 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_ups: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          organization_id: string
+          patient_id: string
+          scheduled_date: string | null
+          status: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id: string
+          patient_id: string
+          scheduled_date?: string | null
+          status?: string
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id?: string
+          patient_id?: string
+          scheduled_date?: string | null
+          status?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_ups_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_patients"
             referencedColumns: ["id"]
           },
         ]
