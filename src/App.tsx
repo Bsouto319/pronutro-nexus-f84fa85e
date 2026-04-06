@@ -32,10 +32,12 @@ const App = () => (
           <OrganizationProvider>
             <div>
               <Routes>
+                {/* Landing page is the root — accessible on mobile and desktop */}
+                <Route path="/" element={<Landing />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/admin" element={<AdminLP />} />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
                 <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
                 <Route path="/medicos" element={<ProtectedRoute><Medicos /></ProtectedRoute>} />

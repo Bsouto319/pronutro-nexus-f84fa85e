@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { title: "Dashboard", path: "/", icon: LayoutDashboard },
+  { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { title: "Kanban Leads", path: "/kanban", icon: Columns },
   { title: "Pacientes", path: "/pacientes", icon: Users },
   { title: "Agenda", path: "/agenda", icon: Calendar },
