@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { OrganizationProvider } from "@/hooks/useOrganization";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -16,8 +16,6 @@ import Integracoes from "./pages/Integracoes";
 import Configuracoes from "./pages/Configuracoes";
 import Kanban from "./pages/Kanban";
 import Auth from "./pages/Auth";
-import Landing from "./pages/Landing";
-import AdminLP from "./pages/AdminLP";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,10 +30,9 @@ const App = () => (
           <OrganizationProvider>
             <div>
               <Routes>
-                {/* Landing page is the root — accessible on mobile and desktop */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/landing" element={<Landing />} />
-                <Route path="/admin" element={<AdminLP />} />
+                <Route path="/" element={<Auth />} />
+                <Route path="/landing" element={<Navigate to="/auth" replace />} />
+                <Route path="/admin" element={<Navigate to="/auth" replace />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
