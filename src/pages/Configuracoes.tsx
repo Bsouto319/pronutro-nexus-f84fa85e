@@ -37,6 +37,41 @@ const Configuracoes = () => {
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [notifyWhatsApp, setNotifyWhatsApp] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (format: "json" | "csv") => {
+    if (!organizationId) return;
+    setIsExporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão inválida");
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const url = `https://${projectId}.supabase.co/functions/v1/export-org-data?org_id=${organizationId}&format=${format}`;
+      
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
+
+      if (!res.ok) throw new Error("Erro na exportação");
+
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `export_${organizationId.slice(0, 8)}_${new Date().toISOString().slice(0, 10)}.${format}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast.success(`Dados exportados em ${format.toUpperCase()}!`);
+    } catch (err) {
+      if (import.meta.env.DEV) console.error(err);
+      toast.error("Erro ao exportar dados.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (org) setOrgName(org.name);
