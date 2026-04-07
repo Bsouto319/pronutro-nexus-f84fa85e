@@ -271,6 +271,7 @@ const Configuracoes = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="notifications">
             <div className="glass rounded-2xl p-6 border border-border/40 space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground mb-1">Preferências de Notificação</h2>
