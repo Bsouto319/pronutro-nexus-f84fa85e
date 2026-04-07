@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
-import { Settings, Building2, Users, Bell, Palette, Save, Zap } from "lucide-react";
+import { Settings, Building2, Bell, Save, Zap, Download, FileJson, FileSpreadsheet, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getInvalidWebhookReason, getStoredWebhookUrl, saveWebhookUrl } from "@/lib/n8n-webhook";
-
 const Configuracoes = () => {
   const { organizationId } = useOrganization();
   const { user } = useAuth();
