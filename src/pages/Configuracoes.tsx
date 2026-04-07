@@ -127,9 +127,10 @@ const Configuracoes = () => {
         </div>
 
         <Tabs defaultValue="org" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 glass">
+          <TabsList className="grid w-full grid-cols-4 glass">
             <TabsTrigger value="org" className="gap-2"><Building2 className="w-4 h-4" /> Organização</TabsTrigger>
             <TabsTrigger value="integrations" className="gap-2"><Zap className="w-4 h-4" /> Integrações</TabsTrigger>
+            <TabsTrigger value="export" className="gap-2"><Download className="w-4 h-4" /> Exportar</TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2"><Bell className="w-4 h-4" /> Notificações</TabsTrigger>
           </TabsList>
 
