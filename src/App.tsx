@@ -31,8 +31,6 @@ const App = () => (
             <div>
               <Routes>
                 <Route path="/" element={<Auth />} />
-                <Route path="/landing" element={<Navigate to="/auth" replace />} />
-                <Route path="/admin" element={<Navigate to="/auth" replace />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
