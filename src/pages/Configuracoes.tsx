@@ -215,7 +215,62 @@ const Configuracoes = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="notifications">
+          <TabsContent value="export">
+            <div className="glass rounded-2xl p-6 border border-border/40 space-y-6">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground mb-1">Exportar Dados da Organização</h2>
+                <p className="text-sm text-muted-foreground">
+                  Exporte todos os dados da sua organização (pacientes, consultas, financeiro, leads, agenda).
+                  Ideal para atender solicitações de clientes ou para backup.
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-3">
+                <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <div className="text-sm text-foreground">
+                  <p className="font-medium mb-1">Segurança Multi-Tenant</p>
+                  <p className="text-muted-foreground">
+                    A exportação retorna apenas os dados da <strong>sua organização</strong>. 
+                    Cada cliente opera em um ambiente isolado — nenhum dado de outras organizações é acessível.
+                  </p>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleExport("json")}
+                  disabled={isExporting}
+                  className="flex items-center gap-4 p-5 rounded-xl bg-muted/20 border border-border/30 hover:bg-muted/40 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <FileJson className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Exportar JSON</p>
+                    <p className="text-xs text-muted-foreground">Formato completo para integração com outros sistemas</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleExport("csv")}
+                  disabled={isExporting}
+                  className="flex items-center gap-4 p-5 rounded-xl bg-muted/20 border border-border/30 hover:bg-muted/40 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Exportar CSV</p>
+                    <p className="text-xs text-muted-foreground">Compatível com Excel e Google Sheets</p>
+                  </div>
+                </button>
+              </div>
+              {isExporting && (
+                <p className="text-sm text-muted-foreground animate-pulse">Exportando dados...</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Tabelas incluídas: Pacientes, Médicos, Consultas, Transações Financeiras, Gastos, Agendamentos, Leads, Follow-ups e Procedimentos.
+              </p>
+            </div>
+          </TabsContent>
+
             <div className="glass rounded-2xl p-6 border border-border/40 space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground mb-1">Preferências de Notificação</h2>
