@@ -22,7 +22,7 @@ const categoryColors: Record<string, string> = {
 export function TransactionsTable() {
   const { transactions, isLoading } = useFinanceData();
   const [filterCategory, setFilterCategory] = useState("");
-  const [editGasto, setEditGasto] = useState<null | { id: string; description: string; category: string; fornecedor: string | null; paymentMethod: string | null; source: string }>(null);
+  const [editGasto, setEditGasto] = useState<null | { id: string; description: string; category: string; fornecedor: string | null; paymentMethod: string | null; source: string; valueOut?: number; valueIn?: number }>(null);
 
   const filtered = useMemo(() => {
     let result = [...transactions];
