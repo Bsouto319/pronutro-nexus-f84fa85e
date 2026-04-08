@@ -12,6 +12,7 @@ import { AICapture } from "@/components/financeiro/AICapture";
 import { FinanceExport } from "@/components/financeiro/FinanceExport";
 import { FinanceImport } from "@/components/financeiro/FinanceImport";
 import { AddTransactionDialog } from "@/components/financeiro/AddTransactionDialog";
+import { ClearAllFinanceDialog } from "@/components/financeiro/ClearAllFinanceDialog";
 import { useFinanceData } from "@/hooks/useFinanceData";
 
 const Financeiro = () => {
