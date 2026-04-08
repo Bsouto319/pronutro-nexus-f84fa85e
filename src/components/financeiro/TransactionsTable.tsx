@@ -22,7 +22,7 @@ const categoryColors: Record<string, string> = {
 export function TransactionsTable() {
   const { transactions, isLoading } = useFinanceData();
   const [filterCategory, setFilterCategory] = useState("");
-  const [editGasto, setEditGasto] = useState<null | { id: string; description: string; category: string; fornecedor: string | null; paymentMethod: string | null; source: string }>(null);
+  const [editGasto, setEditGasto] = useState<null | { id: string; description: string; category: string; fornecedor: string | null; paymentMethod: string | null; source: string; valueOut?: number; valueIn?: number }>(null);
 
   const filtered = useMemo(() => {
     let result = [...transactions];
@@ -106,6 +106,8 @@ export function TransactionsTable() {
                         fornecedor: t.fornecedor,
                         paymentMethod: t.paymentMethod,
                         source: t.source,
+                        valueOut: t.valueOut,
+                        valueIn: t.valueIn,
                       })}
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
                       title="Editar"

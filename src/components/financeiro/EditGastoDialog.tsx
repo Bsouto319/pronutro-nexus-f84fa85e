@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
 interface EditGastoDialogProps {
   open: boolean;
@@ -19,6 +19,8 @@ interface EditGastoDialogProps {
     fornecedor: string | null;
     paymentMethod: string | null;
     source: string;
+    valueOut?: number;
+    valueIn?: number;
   } | null;
 }
 
@@ -28,12 +30,23 @@ export function EditGastoDialog({ open, onOpenChange, gasto }: EditGastoDialogPr
   const [origemPagamento, setOrigemPagamento] = useState("");
   const [categoria, setCategoria] = useState("");
   const [fornecedor, setFornecedor] = useState("");
+  const [valor, setValor] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (gasto) {
       setCategoria(gasto.category || "");
       setFornecedor(gasto.fornecedor || "");
+      setDescricao(gasto.description || "");
+      setValor(
+        gasto.valueOut && gasto.valueOut > 0
+          ? String(gasto.valueOut)
+          : gasto.valueIn && gasto.valueIn > 0
+          ? String(gasto.valueIn)
+          : ""
+      );
       setDoctorId("");
       setOrigemPagamento("");
     }
@@ -44,12 +57,16 @@ export function EditGastoDialog({ open, onOpenChange, gasto }: EditGastoDialogPr
   const handleSave = async () => {
     setSaving(true);
     try {
+      const parsedValor = valor ? parseFloat(valor.replace(/[^\d.,]/g, "").replace(",", ".")) : null;
+
       if (gasto.source === "gasto") {
         const updates: Record<string, unknown> = {};
         if (categoria) updates.categoria = categoria;
         if (fornecedor) updates.fornecedor = fornecedor;
+        if (descricao) updates.descricao = descricao;
         if (doctorId) updates.doctor_id = doctorId;
         if (origemPagamento) updates.origem_pagamento = origemPagamento;
+        if (parsedValor !== null && !isNaN(parsedValor)) updates.valor = parsedValor;
 
         const { error } = await supabase
           .from("gastos")
@@ -60,11 +77,19 @@ export function EditGastoDialog({ open, onOpenChange, gasto }: EditGastoDialogPr
       } else {
         const updates: Record<string, unknown> = {};
         if (categoria) updates.category = categoria;
+        if (descricao) updates.description = descricao;
         if (doctorId) {
           const doc = doctors.find(d => d.id === doctorId);
           if (doc) updates.doctor = doc.name;
         }
         if (origemPagamento) updates.bank = origemPagamento;
+        if (parsedValor !== null && !isNaN(parsedValor)) {
+          if ((gasto.valueIn || 0) > 0) {
+            updates.value_in = parsedValor;
+          } else {
+            updates.value_out = parsedValor;
+          }
+        }
 
         const { error } = await supabase
           .from("financial_transactions")
@@ -84,6 +109,24 @@ export function EditGastoDialog({ open, onOpenChange, gasto }: EditGastoDialogPr
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Tem certeza que deseja excluir este registro?")) return;
+    setDeleting(true);
+    try {
+      const table = gasto.source === "gasto" ? "gastos" : "financial_transactions";
+      const { error } = await supabase.from(table).delete().eq("id", gasto.id);
+      if (error) throw error;
+
+      toast.success("Registro excluído!");
+      refetch();
+      onOpenChange(false);
+    } catch {
+      toast.error("Erro ao excluir registro");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const origens = ["Máquina de Cartão", "Pix", "Dinheiro", "Transferência", "Boleto", "Convênio", "Cheque"];
 
   return (
@@ -94,9 +137,26 @@ export function EditGastoDialog({ open, onOpenChange, gasto }: EditGastoDialogPr
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
-          <div className="p-3 rounded-lg bg-muted/50 text-sm">
-            <p className="font-medium text-foreground">{gasto.description}</p>
-            <p className="text-xs text-muted-foreground mt-1">Categoria atual: {gasto.category}</p>
+          <div className="space-y-2">
+            <Label className="text-xs">Descrição</Label>
+            <Input
+              value={descricao}
+              onChange={e => setDescricao(e.target.value)}
+              placeholder="Descrição do registro"
+              className="text-xs"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Valor (R$)</Label>
+            <Input
+              value={valor}
+              onChange={e => setValor(e.target.value)}
+              placeholder="Ex: 1500.00"
+              className="text-xs"
+              type="text"
+              inputMode="decimal"
+            />
           </div>
 
           <div className="space-y-2">
@@ -147,10 +207,21 @@ export function EditGastoDialog({ open, onOpenChange, gasto }: EditGastoDialogPr
             />
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="w-full text-xs">
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
-            Salvar Alterações
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={saving || deleting} className="flex-1 text-xs">
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
+              Salvar Alterações
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={saving || deleting}
+              className="text-xs gap-1.5"
+            >
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Excluir
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
