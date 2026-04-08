@@ -106,6 +106,8 @@ export function TransactionsTable() {
                         fornecedor: t.fornecedor,
                         paymentMethod: t.paymentMethod,
                         source: t.source,
+                        valueOut: t.valueOut,
+                        valueIn: t.valueIn,
                       })}
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
                       title="Editar"
