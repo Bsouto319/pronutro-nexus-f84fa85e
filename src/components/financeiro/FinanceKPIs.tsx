@@ -3,17 +3,60 @@ import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, BarChart3, Stethoscope, Users, Receipt } from "lucide-react";
 import { formatCurrency } from "./financeData";
 import { useFinanceData } from "@/hooks/useFinanceData";
+import { useMemo } from "react";
+import { PeriodRange } from "./PeriodFilter";
 
-export function FinanceKPIs() {
-  const { kpis: data, isLoading } = useFinanceData();
+function parseTransactionDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/");
+    if (parts.length >= 2) {
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const year = parts[2] ? parseInt(parts[2]) : new Date().getFullYear();
+      return new Date(year, month, day);
+    }
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+interface FinanceKPIsProps {
+  period?: PeriodRange;
+}
+
+export function FinanceKPIs({ period }: FinanceKPIsProps) {
+  const { transactions, kpis: data, isLoading } = useFinanceData();
+
+  const filteredKpis = useMemo(() => {
+    if (!period) return data;
+
+    const filtered = transactions.filter(t => {
+      const d = parseTransactionDate(t.date);
+      if (!d) return true;
+      return d >= period.from && d <= period.to;
+    });
+
+    const totalEntradas = filtered.filter(t => t.type === "entrada").reduce((acc, t) => acc + (t.valueIn || 0), 0);
+    const totalSaidas = filtered.filter(t => t.type === "saida").reduce((acc, t) => acc + (t.valueOut || 0), 0);
+
+    return {
+      totalTransacoes: filtered.length,
+      totalEntradas,
+      totalSaidas,
+      saldo: totalEntradas - totalSaidas,
+      totalMedicos: data.totalMedicos,
+      totalPacientes: data.totalPacientes,
+    };
+  }, [transactions, period, data]);
 
   const kpis = [
-    { title: "Total Transações", value: String(data.totalTransacoes), icon: Receipt, type: "neutral" as const },
-    { title: "Entradas", value: formatCurrency(data.totalEntradas), icon: TrendingUp, type: "positive" as const },
-    { title: "Saídas", value: formatCurrency(data.totalSaidas), icon: TrendingDown, type: "negative" as const },
-    { title: "Saldo", value: formatCurrency(data.saldo), icon: BarChart3, type: data.saldo >= 0 ? "positive" as const : "negative" as const },
-    { title: "Médicos", value: String(data.totalMedicos), icon: Stethoscope, type: "neutral" as const },
-    { title: "Pacientes", value: String(data.totalPacientes), icon: Users, type: "neutral" as const },
+    { title: "Total Transações", value: String(filteredKpis.totalTransacoes), icon: Receipt, type: "neutral" as const },
+    { title: "Entradas", value: formatCurrency(filteredKpis.totalEntradas), icon: TrendingUp, type: "positive" as const },
+    { title: "Saídas", value: formatCurrency(filteredKpis.totalSaidas), icon: TrendingDown, type: "negative" as const },
+    { title: "Saldo", value: formatCurrency(filteredKpis.saldo), icon: BarChart3, type: filteredKpis.saldo >= 0 ? "positive" as const : "negative" as const },
+    { title: "Médicos", value: String(filteredKpis.totalMedicos), icon: Stethoscope, type: "neutral" as const },
+    { title: "Pacientes", value: String(filteredKpis.totalPacientes), icon: Users, type: "neutral" as const },
   ];
 
   if (isLoading) {

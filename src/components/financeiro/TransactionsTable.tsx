@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Pencil } from "lucide-react";
 import { EditGastoDialog } from "./EditGastoDialog";
+import { PeriodRange } from "./PeriodFilter";
 
 const categoryColors: Record<string, string> = {
   alimentacao: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
@@ -19,16 +20,42 @@ const categoryColors: Record<string, string> = {
   "Variáveis": "bg-orange-500/15 text-orange-400 border-orange-500/30",
 };
 
-export function TransactionsTable() {
+function parseTransactionDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/");
+    if (parts.length >= 2) {
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const year = parts[2] ? parseInt(parts[2]) : new Date().getFullYear();
+      return new Date(year, month, day);
+    }
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+interface TransactionsTableProps {
+  period?: PeriodRange;
+}
+
+export function TransactionsTable({ period }: TransactionsTableProps) {
   const { transactions, isLoading } = useFinanceData();
   const [filterCategory, setFilterCategory] = useState("");
   const [editGasto, setEditGasto] = useState<null | { id: string; description: string; category: string; fornecedor: string | null; paymentMethod: string | null; source: string; valueOut?: number; valueIn?: number }>(null);
 
   const filtered = useMemo(() => {
     let result = [...transactions];
+    if (period) {
+      result = result.filter(t => {
+        const d = parseTransactionDate(t.date);
+        if (!d) return true;
+        return d >= period.from && d <= period.to;
+      });
+    }
     if (filterCategory) result = result.filter(t => t.category === filterCategory);
     return result;
-  }, [transactions, filterCategory]);
+  }, [transactions, filterCategory, period]);
 
   const categories = useMemo(() => {
     const set = new Set(transactions.map(t => t.category).filter(Boolean));
