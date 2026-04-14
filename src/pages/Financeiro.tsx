@@ -13,10 +13,13 @@ import { FinanceExport } from "@/components/financeiro/FinanceExport";
 import { FinanceImport } from "@/components/financeiro/FinanceImport";
 import { AddTransactionDialog } from "@/components/financeiro/AddTransactionDialog";
 import { ClearAllFinanceDialog } from "@/components/financeiro/ClearAllFinanceDialog";
+import { PeriodFilter, PeriodRange } from "@/components/financeiro/PeriodFilter";
 import { useFinanceData } from "@/hooks/useFinanceData";
+import { useState } from "react";
 
 const Financeiro = () => {
   const { refetch } = useFinanceData();
+  const [period, setPeriod] = useState<PeriodRange>(null);
 
   return (
     <AppLayout>
@@ -26,10 +29,13 @@ const Financeiro = () => {
           <AddTransactionDialog />
           <ClearAllFinanceDialog />
         </div>
+
+        <PeriodFilter value={period} onChange={setPeriod} />
+
         <AICapture />
         <FinanceImport />
         <FinanceExport />
-        <FinanceKPIs />
+        <FinanceKPIs period={period} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DoctorRevenue />
@@ -45,7 +51,7 @@ const Financeiro = () => {
 
         <div className="grid grid-cols-1 gap-6">
           <FinanceCharts />
-          <TransactionsTable />
+          <TransactionsTable period={period} />
         </div>
       </div>
     </AppLayout>
