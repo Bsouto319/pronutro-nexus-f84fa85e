@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { OrganizationProvider } from "@/hooks/useOrganization";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -16,6 +16,8 @@ import Integracoes from "./pages/Integracoes";
 import Configuracoes from "./pages/Configuracoes";
 import Kanban from "./pages/Kanban";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Auth />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/pacientes" element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
                 <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
@@ -41,7 +45,6 @@ const App = () => (
                 <Route path="/integracoes" element={<ProtectedRoute><Integracoes /></ProtectedRoute>} />
                 <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
                 <Route path="/kanban" element={<ProtectedRoute><Kanban /></ProtectedRoute>} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
