@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { TopBar } from "@/components/TopBar";
 import { Settings, Building2, Bell, Save, Zap, Download, FileJson, FileSpreadsheet, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InviteTeamDialog } from "@/components/InviteTeamDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -127,8 +128,9 @@ const Configuracoes = () => {
         </div>
 
         <Tabs defaultValue="org" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 glass">
+          <TabsList className="grid w-full grid-cols-5 glass">
             <TabsTrigger value="org" className="gap-2"><Building2 className="w-4 h-4" /> Organização</TabsTrigger>
+            <TabsTrigger value="team" className="gap-2"><Settings className="w-4 h-4" /> Equipe</TabsTrigger>
             <TabsTrigger value="integrations" className="gap-2"><Zap className="w-4 h-4" /> Integrações</TabsTrigger>
             <TabsTrigger value="export" className="gap-2"><Download className="w-4 h-4" /> Exportar</TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2"><Bell className="w-4 h-4" /> Notificações</TabsTrigger>
@@ -157,6 +159,21 @@ const Configuracoes = () => {
               <Button onClick={handleSaveOrg} disabled={isSaving} className="gradient-primary">
                 <Save className="w-4 h-4 mr-2" /> {isSaving ? "Salvando..." : "Salvar Alterações"}
               </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="team">
+            <div className="glass rounded-2xl p-6 border border-border/40 space-y-6">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground mb-1">Gerenciar Equipe</h2>
+                <p className="text-sm text-muted-foreground">Convide membros para acessar sua clínica.</p>
+              </div>
+              <InviteTeamDialog />
+              <div className="text-xs text-muted-foreground">
+                <p>• O membro precisa ter uma conta cadastrada no sistema.</p>
+                <p>• Após o convite, ele terá acesso aos dados da sua clínica.</p>
+                <p>• Funções disponíveis: Atendente, Médico, Gerente.</p>
+              </div>
             </div>
           </TabsContent>
 

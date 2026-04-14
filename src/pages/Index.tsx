@@ -6,6 +6,7 @@ import { AppointmentsList } from "@/components/AppointmentsList";
 import { DoctorsGrid } from "@/components/DoctorsGrid";
 import { ProceduresChart } from "@/components/ProceduresChart";
 import { LeadStatsRow } from "@/components/kanban/LeadStatsRow";
+import { PeriodFilter, PeriodRange } from "@/components/financeiro/PeriodFilter";
 import { Users, Calendar, DollarSign, Activity } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useFinanceData } from "@/hooks/useFinanceData";
@@ -16,9 +17,10 @@ import { useEffect, useState, useMemo } from "react";
 
 const Index = () => {
   const { consultasHoje, totalPacientes, saldoGeral, isLoading: dashLoading, refetch: refetchDash } = useDashboardData();
-  const { kpis: financeKpis, isLoading: finLoading, refetch: refetchFin } = useFinanceData();
+  const { kpis: financeKpis, transactions, isLoading: finLoading, refetch: refetchFin } = useFinanceData();
   const { organizationId } = useOrganization();
   const [appointmentCount, setAppointmentCount] = useState(0);
+  const [period, setPeriod] = useState<PeriodRange>(null);
 
   const { data: leads } = useQuery({
     queryKey: ["dashboard_leads", organizationId],
@@ -53,11 +55,40 @@ const Index = () => {
     return { leadsHoje: todayLeads, consultasHoje: appointmentCount || consultasHoje, taxaResposta: taxa, aguardandoHumano: aguardando };
   }, [leads, appointmentCount, consultasHoje]);
 
+  // Period-filtered KPIs
+  const periodKpis = useMemo(() => {
+    if (!period) return financeKpis;
+    const parseDate = (dateStr: string): Date | null => {
+      if (!dateStr) return null;
+      if (dateStr.includes("/")) {
+        const parts = dateStr.split("/");
+        if (parts.length >= 2) {
+          const day = parseInt(parts[0]);
+          const month = parseInt(parts[1]) - 1;
+          const year = parts[2] ? parseInt(parts[2]) : new Date().getFullYear();
+          return new Date(year, month, day);
+        }
+      }
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    const filtered = transactions.filter(t => {
+      const d = parseDate(t.date);
+      if (!d) return true;
+      return d >= period.from && d <= period.to;
+    });
+
+    const totalEntradas = filtered.filter(t => t.type === "entrada").reduce((acc, t) => acc + (t.valueIn || 0), 0);
+    const totalSaidas = filtered.filter(t => t.type === "saida").reduce((acc, t) => acc + (t.valueOut || 0), 0);
+    return { ...financeKpis, totalEntradas, totalSaidas, saldo: totalEntradas - totalSaidas, totalTransacoes: filtered.length };
+  }, [period, transactions, financeKpis]);
+
   const formattedKpis = [
     {
       title: "Total Pacientes",
-      value: isLoading ? "..." : (totalPacientes || financeKpis.totalPacientes).toString(),
-      change: financeKpis.totalPacientes > 0 ? `${financeKpis.totalPacientes}` : "0",
+      value: isLoading ? "..." : (totalPacientes || periodKpis.totalPacientes).toString(),
+      change: periodKpis.totalPacientes > 0 ? `${periodKpis.totalPacientes}` : "0",
       changeType: "positive" as const,
       icon: Users,
     },
@@ -70,15 +101,15 @@ const Index = () => {
     },
     {
       title: "Saldo Geral",
-      value: isLoading ? "..." : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(financeKpis.saldo || saldoGeral),
-      change: financeKpis.saldo >= 0 ? "+R$" : "-R$",
-      changeType: (financeKpis.saldo || saldoGeral) >= 0 ? "positive" as const : "negative" as const,
+      value: isLoading ? "..." : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(periodKpis.saldo || saldoGeral),
+      change: periodKpis.saldo >= 0 ? "+R$" : "-R$",
+      changeType: (periodKpis.saldo || saldoGeral) >= 0 ? "positive" as const : "negative" as const,
       icon: DollarSign,
     },
     {
       title: "Médicos Ativos",
-      value: isLoading ? "..." : financeKpis.totalMedicos.toString(),
-      change: financeKpis.totalMedicos > 0 ? `${financeKpis.totalMedicos}` : "0",
+      value: isLoading ? "..." : periodKpis.totalMedicos.toString(),
+      change: periodKpis.totalMedicos > 0 ? `${periodKpis.totalMedicos}` : "0",
       changeType: "positive" as const,
       icon: Activity,
     },
@@ -89,6 +120,8 @@ const Index = () => {
       <TopBar title="Nexus AI Dashboard" subtitle="Visão geral da sua clínica em tempo real" onRefresh={handleRefresh} />
       <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
         <LeadStatsRow {...leadStats} />
+
+        <PeriodFilter value={period} onChange={setPeriod} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {formattedKpis.map((kpi, i) => (
