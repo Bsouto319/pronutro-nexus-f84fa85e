@@ -17,11 +17,14 @@ export type Database = {
       agendamentos: {
         Row: {
           created_at: string
+          data_inicio: string | null
           date: string
           doctor_name: string | null
           id: string
           notes: string | null
           organization_id: string
+          paciente_nome: string | null
+          paciente_telefone: string | null
           patient_name: string
           source: string | null
           status: string
@@ -29,23 +32,29 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          data_inicio?: string | null
           date?: string
           doctor_name?: string | null
           id?: string
           notes?: string | null
           organization_id: string
-          patient_name: string
+          paciente_nome?: string | null
+          paciente_telefone?: string | null
+          patient_name?: string
           source?: string | null
           status?: string
           time?: string | null
         }
         Update: {
           created_at?: string
+          data_inicio?: string | null
           date?: string
           doctor_name?: string | null
           id?: string
           notes?: string | null
           organization_id?: string
+          paciente_nome?: string | null
+          paciente_telefone?: string | null
           patient_name?: string
           source?: string | null
           status?: string
@@ -407,6 +416,7 @@ export type Database = {
           phone: string | null
           source: string | null
           status: string
+          telefone_unique: string | null
         }
         Insert: {
           channel?: string | null
@@ -420,6 +430,7 @@ export type Database = {
           phone?: string | null
           source?: string | null
           status?: string
+          telefone_unique?: string | null
         }
         Update: {
           channel?: string | null
@@ -433,6 +444,7 @@ export type Database = {
           phone?: string | null
           source?: string | null
           status?: string
+          telefone_unique?: string | null
         }
         Relationships: [
           {

@@ -19,13 +19,13 @@ import { toast } from "sonner";
 
 type AppointmentItem = {
   id: string;
-  patient_name: string;
+  paciente_nome: string | null;
+  paciente_telefone: string | null;
   doctor_name: string | null;
-  time: string | null;
+  data_inicio: string | null;
   status: string;
   source: string | null;
   notes: string | null;
-  date: string;
 };
 
 const statusStyles: Record<string, string> = {
@@ -58,6 +58,22 @@ const getMonthRange = (date: Date) => {
 
 const formatDateBR = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
+// Bug 2: convert UTC timestamp to BRT (UTC-3) date string "YYYY-MM-DD"
+const utcToBRTDate = (utcStr: string): string => {
+  const d = new Date(utcStr);
+  const brtMs = d.getTime() - 3 * 60 * 60 * 1000;
+  const brt = new Date(brtMs);
+  return `${brt.getUTCFullYear()}-${String(brt.getUTCMonth() + 1).padStart(2, "0")}-${String(brt.getUTCDate()).padStart(2, "0")}`;
+};
+
+// Bug 2: convert UTC timestamp to BRT time string "HH:mm"
+const utcToBRTTime = (utcStr: string): string => {
+  const d = new Date(utcStr);
+  const brtMs = d.getTime() - 3 * 60 * 60 * 1000;
+  const brt = new Date(brtMs);
+  return `${String(brt.getUTCHours()).padStart(2, "0")}:${String(brt.getUTCMinutes()).padStart(2, "0")}`;
+};
+
 const Agenda = () => {
   const { organizationId } = useOrganization();
   const queryClient = useQueryClient();
@@ -71,6 +87,7 @@ const Agenda = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formPatient, setFormPatient] = useState("");
+  const [formPhone, setFormPhone] = useState("");
   const [formDoctor, setFormDoctor] = useState("");
   const [formTime, setFormTime] = useState("");
   const [formStatus, setFormStatus] = useState("pendente");
@@ -85,14 +102,19 @@ const Agenda = () => {
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
+      // Expand range by 1 day each side to handle UTC-3 offset edge cases
+      const fromDate = new Date(`${monthRange.from}T12:00:00`);
+      fromDate.setDate(fromDate.getDate() - 1);
+      const toDate = new Date(`${monthRange.to}T12:00:00`);
+      toDate.setDate(toDate.getDate() + 1);
+
       const { data, error } = await supabase
         .from("agendamentos")
-        .select("id, patient_name, doctor_name, time, status, source, notes, date")
+        .select("id, paciente_nome, paciente_telefone, doctor_name, data_inicio, status, source, notes")
         .eq("organization_id", organizationId!)
-        .gte("date", monthRange.from)
-        .lte("date", monthRange.to)
-        .order("date", { ascending: true })
-        .order("time", { ascending: true });
+        .gte("data_inicio", toLocalDateInputValue(fromDate))
+        .lte("data_inicio", toLocalDateInputValue(toDate))
+        .order("data_inicio", { ascending: true });
 
       if (error) {
         if (import.meta.env.DEV) console.warn("agendamentos:", error.message);
@@ -103,13 +125,21 @@ const Agenda = () => {
     },
   });
 
+  // Bug 1 + Bug 2: filter by BRT date extracted from data_inicio
   const dayAppointments = useMemo(
-    () => agendamentos.filter((item) => item.date === dateStr),
+    () => agendamentos.filter((item) => {
+      if (!item.data_inicio) return false;
+      return utcToBRTDate(item.data_inicio) === dateStr;
+    }),
     [agendamentos, dateStr],
   );
 
   const bookedDays = useMemo(
-    () => [...new Set(agendamentos.map((item) => item.date))].map((date) => new Date(`${date}T12:00:00`)),
+    () => [...new Set(
+      agendamentos
+        .filter(item => item.data_inicio)
+        .map(item => utcToBRTDate(item.data_inicio!))
+    )].map(date => new Date(`${date}T12:00:00`)),
     [agendamentos],
   );
 
@@ -118,18 +148,21 @@ const Agenda = () => {
 
   const openEdit = (appt: AppointmentItem) => {
     setSelectedAppointment(appt);
-    setFormPatient(appt.patient_name);
+    setFormPatient(appt.paciente_nome || "");
+    setFormPhone(appt.paciente_telefone || "");
     setFormDoctor(appt.doctor_name || "");
-    setFormTime(appt.time || "");
+    setFormTime(appt.data_inicio ? utcToBRTTime(appt.data_inicio) : "");
     setFormStatus(appt.status);
     setFormNotes(appt.notes || "");
-    setSelectedDate(new Date(`${appt.date}T12:00:00`));
+    const brtDate = appt.data_inicio ? utcToBRTDate(appt.data_inicio) : toLocalDateInputValue(new Date());
+    setSelectedDate(new Date(`${brtDate}T12:00:00`));
     setEditOpen(true);
   };
 
   const openAdd = () => {
     setSelectedAppointment(null);
     setFormPatient("");
+    setFormPhone("");
     setFormDoctor("");
     setFormTime("");
     setFormStatus("pendente");
@@ -145,15 +178,19 @@ const Agenda = () => {
     if (!selectedAppointment) return;
     setIsSubmitting(true);
     try {
+      const dataInicio = formTime
+        ? `${dateStr}T${formTime}:00-03:00`
+        : `${dateStr}T00:00:00-03:00`;
+
       const { error } = await supabase
         .from("agendamentos")
         .update({
-          patient_name: formPatient,
+          paciente_nome: formPatient,
+          paciente_telefone: formPhone || null,
           doctor_name: formDoctor || null,
-          time: formTime || null,
+          data_inicio: dataInicio,
           status: formStatus,
           notes: formNotes || null,
-          date: dateStr,
         })
         .eq("id", selectedAppointment.id);
 
@@ -188,18 +225,34 @@ const Agenda = () => {
     if (!organizationId || !formPatient) return;
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("agendamentos").insert([{ 
+      const dataInicio = formTime
+        ? `${dateStr}T${formTime}:00-03:00`
+        : `${dateStr}T00:00:00-03:00`;
+
+      const { error } = await supabase.from("agendamentos").insert([{
         organization_id: organizationId,
-        patient_name: formPatient,
+        paciente_nome: formPatient,
+        paciente_telefone: formPhone || null,
         doctor_name: formDoctor || null,
-        time: formTime || null,
-        date: dateStr,
+        data_inicio: dataInicio,
         status: formStatus,
         notes: formNotes || null,
         source: "manual",
       }]);
 
       if (error) throw error;
+
+      // Bug 3: UPSERT no Kanban para exibir o paciente correto
+      if (formPhone) {
+        await supabase.from("leads").upsert({
+          organization_id: organizationId,
+          name: formPatient,
+          phone: formPhone,
+          telefone_unique: formPhone,
+          status: "agendado",
+        }, { onConflict: "telefone_unique" });
+      }
+
       toast.success("Agendamento criado!");
       setAddOpen(false);
       invalidateAgenda();
@@ -226,13 +279,17 @@ const Agenda = () => {
         <Label>Paciente *</Label>
         <Input value={formPatient} onChange={(e) => setFormPatient(e.target.value)} placeholder="Nome do paciente" required />
       </div>
+      <div className="space-y-2">
+        <Label>Telefone</Label>
+        <Input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="(00) 00000-0000" />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Médico(a)</Label>
           <Input value={formDoctor} onChange={(e) => setFormDoctor(e.target.value)} placeholder="Dr(a)." />
         </div>
         <div className="space-y-2">
-          <Label>Horário</Label>
+          <Label>Horário (BRT)</Label>
           <Input type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} />
         </div>
       </div>
@@ -370,11 +427,18 @@ const Agenda = () => {
                           )}
                         </div>
                         <div>
-                          <p className="text-lg font-display font-bold text-foreground">{appointment.patient_name}</p>
+                          {/* Bug 1: usar paciente_nome */}
+                          <p className="text-lg font-display font-bold text-foreground">
+                            {appointment.paciente_nome || "Paciente não identificado"}
+                          </p>
                           <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:flex-wrap md:items-center md:gap-4">
                             <span className="inline-flex items-center gap-2"><UserRound className="w-4 h-4" /> Paciente</span>
                             {appointment.doctor_name && <span className="inline-flex items-center gap-2"><Stethoscope className="w-4 h-4" /> Dr(a). {appointment.doctor_name}</span>}
-                            <span className="inline-flex items-center gap-2"><Clock3 className="w-4 h-4" /> {appointment.time || "Sem horário"}</span>
+                            {/* Bug 2: converter data_inicio UTC para BRT */}
+                            <span className="inline-flex items-center gap-2">
+                              <Clock3 className="w-4 h-4" />
+                              {appointment.data_inicio ? utcToBRTTime(appointment.data_inicio) : "Sem horário"}
+                            </span>
                           </div>
                         </div>
                         {appointment.notes && <p className="text-sm text-muted-foreground leading-relaxed">{appointment.notes}</p>}
@@ -421,7 +485,7 @@ const Agenda = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Agendamento</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o agendamento de <strong>{selectedAppointment?.patient_name}</strong>? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o agendamento de <strong>{selectedAppointment?.paciente_nome}</strong>? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
