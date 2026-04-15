@@ -231,9 +231,11 @@ const Agenda = () => {
 
       const { error } = await supabase.from("agendamentos").insert([{
         organization_id: organizationId,
+        patient_name: formPatient,
         paciente_nome: formPatient,
         paciente_telefone: formPhone || null,
         doctor_name: formDoctor || null,
+        profissional: formDoctor || null,
         data_inicio: dataInicio,
         status: formStatus,
         notes: formNotes || null,

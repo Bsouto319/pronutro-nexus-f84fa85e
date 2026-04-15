@@ -17,39 +17,63 @@ export type Database = {
       agendamentos: {
         Row: {
           created_at: string
+          data_fim: string | null
+          data_inicio: string | null
           date: string
           doctor_name: string | null
+          google_event_id: string | null
           id: string
           notes: string | null
           organization_id: string
+          paciente_nome: string | null
+          paciente_telefone: string | null
           patient_name: string
+          profissional: string | null
           source: string | null
           status: string
           time: string | null
+          titulo: string | null
+          valor: number | null
         }
         Insert: {
           created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
           date?: string
           doctor_name?: string | null
+          google_event_id?: string | null
           id?: string
           notes?: string | null
           organization_id: string
+          paciente_nome?: string | null
+          paciente_telefone?: string | null
           patient_name: string
+          profissional?: string | null
           source?: string | null
           status?: string
           time?: string | null
+          titulo?: string | null
+          valor?: number | null
         }
         Update: {
           created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
           date?: string
           doctor_name?: string | null
+          google_event_id?: string | null
           id?: string
           notes?: string | null
           organization_id?: string
+          paciente_nome?: string | null
+          paciente_telefone?: string | null
           patient_name?: string
+          profissional?: string | null
           source?: string | null
           status?: string
           time?: string | null
+          titulo?: string | null
+          valor?: number | null
         }
         Relationships: [
           {

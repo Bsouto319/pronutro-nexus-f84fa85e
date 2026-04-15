@@ -41,26 +41,41 @@ export function AppointmentsList() {
     refetchInterval: 30000,
     queryFn: async (): Promise<Appointment[]> => {
       const today = new Date().toISOString().split("T")[0];
+      // Fetch by date OR by data_inicio range for today (BRT = UTC-3)
+      const todayStart = `${today}T03:00:00+00:00`; // 00:00 BRT
+      const tomorrowStart = new Date(new Date(today).getTime() + 86400000).toISOString().split("T")[0] + "T03:00:00+00:00";
+      
       const { data, error } = await supabase
         .from("agendamentos")
-        .select("id, patient_name, doctor_name, time, notes, status")
+        .select("id, patient_name, paciente_nome, doctor_name, profissional, time, data_inicio, notes, status")
         .eq("organization_id", organizationId!)
-        .eq("date", today)
-        .order("time", { ascending: true });
+        .or(`date.eq.${today},and(data_inicio.gte.${todayStart},data_inicio.lt.${tomorrowStart})`)
+        .order("data_inicio", { ascending: true, nullsFirst: false });
 
       if (error) {
         if (import.meta.env.DEV) console.error("Erro ao buscar agendamentos:", error);
         throw error;
       }
 
-      return (data || []).map((item) => ({
-        id: item.id,
-        patient: item.patient_name,
-        doctor: item.doctor_name || "A definir",
-        time: item.time || "--:--",
-        procedure: item.notes || "Consulta",
-        status: mapStatus(item.status),
-      }));
+      return (data || []).map((item: any) => {
+        const name = item.paciente_nome || item.patient_name || "Paciente";
+        const doctor = item.profissional || item.doctor_name || "A definir";
+        let time = item.time || "--:--";
+        if (item.data_inicio) {
+          const d = new Date(item.data_inicio);
+          // Convert to BRT (UTC-3)
+          d.setHours(d.getHours() - 3);
+          time = d.toISOString().slice(11, 16);
+        }
+        return {
+          id: item.id,
+          patient: name,
+          doctor,
+          time,
+          procedure: item.notes || "Consulta",
+          status: mapStatus(item.status),
+        };
+      });
     },
   });
 
