@@ -40,19 +40,24 @@ Deno.serve(async (req) => {
     const safe = (s: unknown, max = 255): string | null =>
       typeof s === "string" ? s.slice(0, max) : null;
 
-    const patient_name = safe(body.patient_name || body.paciente || body.nome || body.summary) || "Paciente não identificado";
-    const doctor_name = safe(body.doctor_name || body.medico || body.doctor);
+    const patient_name = safe(body.paciente_nome || body.patient_name || body.paciente || body.nome || body.summary) || "Paciente não identificado";
+    const doctor_name = safe(body.profissional || body.doctor_name || body.medico || body.doctor);
     const rawDate = body.date || body.data || new Date().toISOString().split("T")[0];
     const time = safe(body.time || body.horario || body.hora);
     const rawStatus = body.status || "confirmado";
     const source = safe(body.source || body.channel || "google_calendar");
     const notes = safe(body.notes || body.observacoes || body.description || body.last_message, 2000);
-    const phone = safe(body.phone || body.telefone || body.whatsapp || body.numero, 50);
+    const phone = safe(body.paciente_telefone || body.phone || body.telefone || body.whatsapp || body.numero, 50);
     const channel = safe(body.channel || (source?.includes("whatsapp") ? "whatsapp" : null), 50);
+    const data_inicio = body.data_inicio || null;
+    const data_fim = body.data_fim || null;
+    const titulo = safe(body.titulo || body.title, 500);
+    const valor = typeof body.valor === "number" ? body.valor : (parseFloat(body.valor) || 0);
+    const google_event_id = safe(body.google_event_id || body.event_id, 255);
 
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(rawDate)) {
+    if (!dateRegex.test(rawDate) && !data_inicio) {
       return new Response(JSON.stringify({ success: false, error: "Invalid date format. Expected YYYY-MM-DD." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -66,9 +71,17 @@ Deno.serve(async (req) => {
     const { data, error } = await supabase.from("agendamentos").insert({
       organization_id: ORG_ID,
       patient_name,
+      paciente_nome: patient_name,
       doctor_name,
-      date: rawDate,
+      profissional: doctor_name,
+      date: data_inicio ? new Date(data_inicio).toISOString().split("T")[0] : rawDate,
       time,
+      data_inicio,
+      data_fim,
+      titulo,
+      valor,
+      google_event_id,
+      paciente_telefone: phone,
       status,
       source,
       notes,
