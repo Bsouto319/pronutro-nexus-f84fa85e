@@ -108,13 +108,9 @@ const Agenda = () => {
 
   const { data: agendamentos = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["agendamentos", organizationId, monthRange.from, monthRange.to],
-    enabled: !!organizationId,
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      // Expand range by 1 day each side to cover UTC-3 edge cases.
-      // Use explicit ISO 8601 UTC timestamps so the timestamptz comparison
-      // is unambiguous regardless of the Postgres session timezone.
       const fromDate = new Date(`${monthRange.from}T12:00:00`);
       fromDate.setDate(fromDate.getDate() - 1);
       const toDate = new Date(`${monthRange.to}T12:00:00`);
@@ -123,17 +119,20 @@ const Agenda = () => {
       const fromISO = `${toLocalDateInputValue(fromDate)}T00:00:00Z`;
       const toISO   = `${toLocalDateInputValue(toDate)}T23:59:59Z`;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("agendamentos")
-        .select("id, paciente_nome, paciente_telefone, doctor_name, data_inicio, status, source, notes")
-        .eq("organization_id", organizationId!)
+        .select("id, paciente_nome, paciente_telefone, doctor_name, data_inicio, status, source, notes");
+
+      if (organizationId) {
+        query = query.eq("organization_id", organizationId);
+      }
+
+      const { data, error } = await query
         .gte("data_inicio", fromISO)
         .lte("data_inicio", toISO)
         .order("data_inicio", { ascending: true });
 
       if (error) {
-        // Throw so React Query sets isError = true and shows the retry button.
-        // Common cause: a selected column doesn't exist in the DB schema.
         console.error("agendamentos query error:", error.message);
         throw new Error(error.message);
       }
