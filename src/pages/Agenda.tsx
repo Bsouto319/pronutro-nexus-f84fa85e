@@ -58,17 +58,27 @@ const getMonthRange = (date: Date) => {
 
 const formatDateBR = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
-// Bug 2: convert UTC timestamp to BRT (UTC-3) date string "YYYY-MM-DD"
+// Normalize PostgreSQL timestamptz format to valid ISO 8601 for reliable parsing.
+// PostgreSQL may return "2026-04-14 20:00:00+00" (space, short offset).
+// JS requires "2026-04-14T20:00:00+00:00" (T separator, full offset).
+const normalizeTimestamp = (utcStr: string): string =>
+  utcStr
+    .replace(" ", "T")                       // space → T
+    .replace(/([+-]\d{2})$/, "$1:00");       // +00 → +00:00
+
+// Convert UTC timestamp to BRT (UTC-3) date string "YYYY-MM-DD"
 const utcToBRTDate = (utcStr: string): string => {
-  const d = new Date(utcStr);
+  const d = new Date(normalizeTimestamp(utcStr));
+  if (isNaN(d.getTime())) return "";
   const brtMs = d.getTime() - 3 * 60 * 60 * 1000;
   const brt = new Date(brtMs);
   return `${brt.getUTCFullYear()}-${String(brt.getUTCMonth() + 1).padStart(2, "0")}-${String(brt.getUTCDate()).padStart(2, "0")}`;
 };
 
-// Bug 2: convert UTC timestamp to BRT time string "HH:mm"
+// Convert UTC timestamp to BRT time string "HH:mm"
 const utcToBRTTime = (utcStr: string): string => {
-  const d = new Date(utcStr);
+  const d = new Date(normalizeTimestamp(utcStr));
+  if (isNaN(d.getTime())) return "Sem horário";
   const brtMs = d.getTime() - 3 * 60 * 60 * 1000;
   const brt = new Date(brtMs);
   return `${String(brt.getUTCHours()).padStart(2, "0")}:${String(brt.getUTCMinutes()).padStart(2, "0")}`;
@@ -102,23 +112,30 @@ const Agenda = () => {
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      // Expand range by 1 day each side to handle UTC-3 offset edge cases
+      // Expand range by 1 day each side to cover UTC-3 edge cases.
+      // Use explicit ISO 8601 UTC timestamps so the timestamptz comparison
+      // is unambiguous regardless of the Postgres session timezone.
       const fromDate = new Date(`${monthRange.from}T12:00:00`);
       fromDate.setDate(fromDate.getDate() - 1);
       const toDate = new Date(`${monthRange.to}T12:00:00`);
       toDate.setDate(toDate.getDate() + 1);
 
+      const fromISO = `${toLocalDateInputValue(fromDate)}T00:00:00Z`;
+      const toISO   = `${toLocalDateInputValue(toDate)}T23:59:59Z`;
+
       const { data, error } = await supabase
         .from("agendamentos")
         .select("id, paciente_nome, paciente_telefone, doctor_name, data_inicio, status, source, notes")
         .eq("organization_id", organizationId!)
-        .gte("data_inicio", toLocalDateInputValue(fromDate))
-        .lte("data_inicio", toLocalDateInputValue(toDate))
+        .gte("data_inicio", fromISO)
+        .lte("data_inicio", toISO)
         .order("data_inicio", { ascending: true });
 
       if (error) {
-        if (import.meta.env.DEV) console.warn("agendamentos:", error.message);
-        return [] as AppointmentItem[];
+        // Throw so React Query sets isError = true and shows the retry button.
+        // Common cause: a selected column doesn't exist in the DB schema.
+        console.error("agendamentos query error:", error.message);
+        throw new Error(error.message);
       }
 
       return (data || []) as AppointmentItem[];
