@@ -19,9 +19,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (!organizationId) {
-    return <Navigate to="/onboarding" replace />;
-  }
+  // Don't force onboarding redirect — allow pages to work without org
 
   return <>{children}</>;
 }

@@ -37,18 +37,21 @@ export function AppointmentsList() {
 
   const { data: appointments = [], isLoading: loading, refetch } = useQuery({
     queryKey: ["dashboard_appointments", organizationId],
-    enabled: !!organizationId,
     refetchInterval: 30000,
     queryFn: async (): Promise<Appointment[]> => {
       const today = new Date().toISOString().split("T")[0];
-      // Fetch by date OR by data_inicio range for today (BRT = UTC-3)
-      const todayStart = `${today}T03:00:00+00:00`; // 00:00 BRT
+      const todayStart = `${today}T03:00:00+00:00`;
       const tomorrowStart = new Date(new Date(today).getTime() + 86400000).toISOString().split("T")[0] + "T03:00:00+00:00";
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("agendamentos")
-        .select("id, patient_name, paciente_nome, doctor_name, profissional, time, data_inicio, notes, status")
-        .eq("organization_id", organizationId!)
+        .select("id, patient_name, paciente_nome, doctor_name, profissional, time, data_inicio, notes, status");
+
+      if (organizationId) {
+        query = query.eq("organization_id", organizationId);
+      }
+
+      const { data, error } = await query
         .or(`date.eq.${today},and(data_inicio.gte.${todayStart},data_inicio.lt.${tomorrowStart})`)
         .order("data_inicio", { ascending: true, nullsFirst: false });
 
