@@ -261,16 +261,8 @@ const Agenda = () => {
       if (error) throw error;
 
       // Bug 3: UPSERT no Kanban para exibir o paciente correto
-      if (formPhone) {
-        await supabase.from("leads").upsert({
-          organization_id: organizationId,
-          name: formPatient,
-          phone: formPhone,
-          status: "agendado",
-        } as any, { onConflict: "id" } as any).then(() => {
-          // Fallback: just try insert if no match
-        }).catch(() => {});
-      }
+        // The trigger auto_create_lead_from_agendamento handles lead creation
+        // No manual upsert needed here
 
       toast.success("Agendamento criado!");
       setAddOpen(false);
