@@ -2,12 +2,28 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 
+// Get BRT "today" range in UTC
+function getTodayBRTRange() {
+  const now = new Date();
+  // BRT = UTC-3, so "today" in BRT starts at 03:00 UTC
+  const brtNow = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const yyyy = brtNow.getUTCFullYear();
+  const mm = String(brtNow.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(brtNow.getUTCDate()).padStart(2, "0");
+  const todayBRT = `${yyyy}-${mm}-${dd}`;
+  const startUTC = `${todayBRT}T03:00:00+00:00`;
+  const nextDay = new Date(Date.UTC(yyyy, brtNow.getUTCMonth(), brtNow.getUTCDate() + 1));
+  const nd = `${nextDay.getUTCFullYear()}-${String(nextDay.getUTCMonth() + 1).padStart(2, "0")}-${String(nextDay.getUTCDate()).padStart(2, "0")}`;
+  const endUTC = `${nd}T02:59:59+00:00`;
+  return { startUTC, endUTC, todayBRT };
+}
+
 export function useDashboardData() {
   const { organizationId } = useOrganization();
-  const today = new Date().toISOString().split("T")[0];
+  const { startUTC, endUTC, todayBRT } = getTodayBRTRange();
 
   const agendamentosHoje = useQuery({
-    queryKey: ["agendamentos_hoje", today, organizationId],
+    queryKey: ["agendamentos_hoje", todayBRT, organizationId],
     enabled: !!organizationId,
     refetchInterval: 30000,
     queryFn: async () => {
@@ -15,8 +31,9 @@ export function useDashboardData() {
         .from("agendamentos")
         .select("*")
         .eq("organization_id", organizationId!)
-        .eq("date", today)
-        .order("time", { ascending: true });
+        .gte("data_inicio", startUTC)
+        .lte("data_inicio", endUTC)
+        .order("data_inicio", { ascending: true });
       if (error) { if (import.meta.env.DEV) console.warn("agendamentos:", error.message); return []; }
       return data || [];
     },
