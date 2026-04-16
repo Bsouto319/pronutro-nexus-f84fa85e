@@ -12,7 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate shared secret
     const secret = req.headers.get("x-webhook-secret");
     const expectedSecret = Deno.env.get("WEBHOOK_SECRET");
     if (!expectedSecret || secret !== expectedSecret) {
@@ -27,35 +26,33 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Missing Supabase environment variables");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
     const ORG_ID = "65777d18-1126-481d-93d9-169237388d7f";
 
-    // Accept flexible field names from n8n
     const safe = (s: unknown, max = 255): string | null =>
-      typeof s === "string" ? s.slice(0, max) : null;
+      typeof s === "string" && s.trim() ? s.trim().slice(0, max) : null;
 
-    const patient_name = safe(body.paciente_nome || body.patient_name || body.paciente || body.nome || body.summary) || "Paciente não identificado";
-    const doctor_name = safe(body.profissional || body.doctor_name || body.medico || body.doctor);
+    // Resolve patient name: try multiple fields
+    const patient_name = safe(body.paciente_nome) || safe(body.patient_name) || safe(body.paciente) || safe(body.nome) || safe(body.name) || safe(body.summary) || "Paciente não identificado";
+    const doctor_name = safe(body.profissional) || safe(body.doctor_name) || safe(body.medico) || safe(body.doctor);
     const rawDate = body.date || body.data || new Date().toISOString().split("T")[0];
     const time = safe(body.time || body.horario || body.hora);
     const rawStatus = body.status || "confirmado";
     const source = safe(body.source || body.channel || "google_calendar");
     const notes = safe(body.notes || body.observacoes || body.description || body.last_message, 2000);
-    const phone = safe(body.paciente_telefone || body.phone || body.telefone || body.whatsapp || body.numero, 50);
-    const channel = safe(body.channel || (source?.includes("whatsapp") ? "whatsapp" : null), 50);
+    // Resolve phone: try multiple fields
+    const phone = safe(body.paciente_telefone) || safe(body.phone) || safe(body.patient_phone) || safe(body.telefone) || safe(body.whatsapp) || safe(body.numero);
+    const channel = safe(body.channel) || (phone ? "whatsapp" : null);
     const data_inicio = body.data_inicio || null;
     const data_fim = body.data_fim || null;
     const titulo = safe(body.titulo || body.title, 500);
     const valor = typeof body.valor === "number" ? body.valor : (parseFloat(body.valor) || 0);
     const google_event_id = safe(body.google_event_id || body.event_id, 255);
 
-    // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(rawDate) && !data_inicio) {
       return new Response(JSON.stringify({ success: false, error: "Invalid date format. Expected YYYY-MM-DD." }), {
@@ -64,7 +61,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate status enum
     const VALID_STATUSES = ["confirmado", "pendente", "cancelado"];
     const status = VALID_STATUSES.includes(rawStatus) ? rawStatus : "pendente";
 
@@ -76,7 +72,7 @@ Deno.serve(async (req) => {
       profissional: doctor_name,
       date: data_inicio ? new Date(data_inicio).toISOString().split("T")[0] : rawDate,
       time,
-      data_inicio,
+      data_inicio: data_inicio || `${rawDate}T12:00:00-03:00`,
       data_fim,
       titulo,
       valor,
@@ -94,30 +90,59 @@ Deno.serve(async (req) => {
 
     console.log("Agendamento created:", data.id);
 
-    if (phone || notes || channel) {
-      const leadStatus = status === "confirmado" ? "agendado" : status === "cancelado" ? "perdido" : "novo_lead";
+    // Always upsert lead - find by phone first, then by name
+    const leadStatus = status === "confirmado" ? "agendado" : status === "cancelado" ? "perdido" : "novo_lead";
+    let existingLead = null;
 
-      const { data: existingLead } = await supabase
+    if (phone) {
+      const { data: byPhone } = await supabase
         .from("leads")
         .select("id, phone")
         .eq("organization_id", ORG_ID)
-        .or(`name.eq.${patient_name}${phone ? `,phone.eq.${phone}` : ""}`)
+        .eq("phone", phone)
         .limit(1)
         .maybeSingle();
+      existingLead = byPhone;
+    }
 
-      if (existingLead) {
-        await supabase
-          .from("leads")
-          .update({
-            phone: phone || existingLead.phone,
-            source,
-            channel,
-            status: leadStatus,
-            last_message: notes || `Agendamento para ${rawDate}${time ? ` às ${time}` : ""}`,
-            last_message_at: new Date().toISOString(),
-          })
-          .eq("id", existingLead.id);
-      }
+    if (!existingLead && patient_name !== "Paciente não identificado") {
+      const { data: byName } = await supabase
+        .from("leads")
+        .select("id, phone")
+        .eq("organization_id", ORG_ID)
+        .ilike("name", patient_name)
+        .limit(1)
+        .maybeSingle();
+      existingLead = byName;
+    }
+
+    const leadMessage = titulo || notes || `Agendamento para ${rawDate}${time ? ` às ${time}` : ""}`;
+
+    if (existingLead) {
+      await supabase
+        .from("leads")
+        .update({
+          name: patient_name !== "Paciente não identificado" ? patient_name : undefined,
+          phone: phone || existingLead.phone,
+          source,
+          channel,
+          status: leadStatus,
+          last_message: leadMessage,
+          last_message_at: new Date().toISOString(),
+        })
+        .eq("id", existingLead.id);
+    } else if (patient_name !== "Paciente não identificado") {
+      // CREATE new lead
+      await supabase.from("leads").insert({
+        organization_id: ORG_ID,
+        name: patient_name,
+        phone,
+        source: source || "google_calendar",
+        channel,
+        status: leadStatus,
+        last_message: leadMessage,
+        last_message_at: new Date().toISOString(),
+      });
     }
 
     return new Response(JSON.stringify({ success: true, id: data.id }), {

@@ -111,13 +111,13 @@ const Agenda = () => {
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const fromDate = new Date(`${monthRange.from}T12:00:00`);
-      fromDate.setDate(fromDate.getDate() - 1);
-      const toDate = new Date(`${monthRange.to}T12:00:00`);
-      toDate.setDate(toDate.getDate() + 1);
-
-      const fromISO = `${toLocalDateInputValue(fromDate)}T00:00:00Z`;
-      const toISO   = `${toLocalDateInputValue(toDate)}T23:59:59Z`;
+      // BRT = UTC-3: first day of month in BRT starts at 03:00 UTC of that day
+      // Last day ends at 02:59:59 UTC of the next day
+      const fromUTC = `${monthRange.from}T03:00:00+00:00`;
+      // Add 1 day to end of month for the UTC cutoff
+      const endDate = new Date(`${monthRange.to}T12:00:00`);
+      endDate.setDate(endDate.getDate() + 1);
+      const toUTC = `${toLocalDateInputValue(endDate)}T02:59:59+00:00`;
 
       let query = supabase
         .from("agendamentos")
@@ -128,8 +128,8 @@ const Agenda = () => {
       }
 
       const { data, error } = await query
-        .gte("data_inicio", fromISO)
-        .lte("data_inicio", toISO)
+        .gte("data_inicio", fromUTC)
+        .lte("data_inicio", toUTC)
         .order("data_inicio", { ascending: true });
 
       if (error) {
@@ -261,15 +261,8 @@ const Agenda = () => {
       if (error) throw error;
 
       // Bug 3: UPSERT no Kanban para exibir o paciente correto
-      if (formPhone) {
-        await supabase.from("leads").upsert({
-          organization_id: organizationId,
-          name: formPatient,
-          phone: formPhone,
-          telefone_unique: formPhone,
-          status: "agendado",
-        }, { onConflict: "telefone_unique" });
-      }
+        // The trigger auto_create_lead_from_agendamento handles lead creation
+        // No manual upsert needed here
 
       toast.success("Agendamento criado!");
       setAddOpen(false);

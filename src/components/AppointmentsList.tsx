@@ -39,9 +39,15 @@ export function AppointmentsList() {
     queryKey: ["dashboard_appointments", organizationId],
     refetchInterval: 30000,
     queryFn: async (): Promise<Appointment[]> => {
-      const today = new Date().toISOString().split("T")[0];
-      const todayStart = `${today}T03:00:00+00:00`;
-      const tomorrowStart = new Date(new Date(today).getTime() + 86400000).toISOString().split("T")[0] + "T03:00:00+00:00";
+      // BRT = UTC-3: "today" in BRT starts at 03:00 UTC
+      const now = new Date();
+      const brtNow = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      const yyyy = brtNow.getUTCFullYear();
+      const mm = String(brtNow.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(brtNow.getUTCDate()).padStart(2, "0");
+      const todayStart = `${yyyy}-${mm}-${dd}T03:00:00+00:00`;
+      const nextDay = new Date(Date.UTC(yyyy, brtNow.getUTCMonth(), brtNow.getUTCDate() + 1));
+      const tomorrowEnd = `${nextDay.getUTCFullYear()}-${String(nextDay.getUTCMonth() + 1).padStart(2, "0")}-${String(nextDay.getUTCDate()).padStart(2, "0")}T02:59:59+00:00`;
       
       let query = supabase
         .from("agendamentos")
@@ -52,7 +58,8 @@ export function AppointmentsList() {
       }
 
       const { data, error } = await query
-        .or(`date.eq.${today},and(data_inicio.gte.${todayStart},data_inicio.lt.${tomorrowStart})`)
+        .gte("data_inicio", todayStart)
+        .lte("data_inicio", tomorrowEnd)
         .order("data_inicio", { ascending: true, nullsFirst: false });
 
       if (error) {
