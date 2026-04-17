@@ -1,20 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
+import { getBrtUtcRange } from "@/lib/datetime";
 
-// Get BRT "today" range in UTC
 function getTodayBRTRange() {
   const now = new Date();
-  // BRT = UTC-3, so "today" in BRT starts at 03:00 UTC
-  const brtNow = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-  const yyyy = brtNow.getUTCFullYear();
-  const mm = String(brtNow.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(brtNow.getUTCDate()).padStart(2, "0");
-  const todayBRT = `${yyyy}-${mm}-${dd}`;
-  const startUTC = `${todayBRT}T03:00:00+00:00`;
-  const nextDay = new Date(Date.UTC(yyyy, brtNow.getUTCMonth(), brtNow.getUTCDate() + 1));
-  const nd = `${nextDay.getUTCFullYear()}-${String(nextDay.getUTCMonth() + 1).padStart(2, "0")}-${String(nextDay.getUTCDate()).padStart(2, "0")}`;
-  const endUTC = `${nd}T02:59:59+00:00`;
+  const todayBRT = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const { startUTC, endUTC } = getBrtUtcRange(now);
   return { startUTC, endUTC, todayBRT };
 }
 
@@ -24,16 +16,20 @@ export function useDashboardData() {
 
   const agendamentosHoje = useQuery({
     queryKey: ["agendamentos_hoje", todayBRT, organizationId],
-    enabled: !!organizationId,
     refetchInterval: 30000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("agendamentos")
-        .select("*")
-        .eq("organization_id", organizationId!)
+        .select("id")
         .gte("data_inicio", startUTC)
         .lte("data_inicio", endUTC)
         .order("data_inicio", { ascending: true });
+
+      if (organizationId) {
+        query = query.eq("organization_id", organizationId);
+      }
+
+      const { data, error } = await query;
       if (error) { if (import.meta.env.DEV) console.warn("agendamentos:", error.message); return []; }
       return data || [];
     },
