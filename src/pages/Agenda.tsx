@@ -20,13 +20,16 @@ import { getBrtMonthUtcRange, utcToBrtDate, utcToBrtTime } from "@/lib/datetime"
 
 type AppointmentItem = {
   id: string;
+  patient_name: string | null;
   paciente_nome: string | null;
   paciente_telefone: string | null;
   doctor_name: string | null;
+  profissional: string | null;
   data_inicio: string | null;
   status: string;
   source: string | null;
   notes: string | null;
+  titulo?: string | null;
 };
 
 const statusStyles: Record<string, string> = {
@@ -73,7 +76,7 @@ const Agenda = () => {
   const monthRange = useMemo(() => getBrtMonthUtcRange(visibleMonth), [visibleMonth]);
 
   const { data: agendamentos = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["agendamentos", organizationId, monthRange.from, monthRange.to],
+    queryKey: ["agendamentos", organizationId, monthRange.startUTC, monthRange.endUTC],
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
@@ -398,7 +401,7 @@ const Agenda = () => {
                         <div>
                           {/* Bug 1: usar paciente_nome */}
                           <p className="text-lg font-display font-bold text-foreground">
-                            {appointment.paciente_nome || "Paciente não identificado"}
+                            {appointment.paciente_nome || appointment.patient_name || appointment.titulo || "Paciente não identificado"}
                           </p>
                           <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:flex-wrap md:items-center md:gap-4">
                             <span className="inline-flex items-center gap-2"><UserRound className="w-4 h-4" /> Paciente</span>
