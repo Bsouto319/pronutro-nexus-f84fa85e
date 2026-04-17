@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
+import { getBrtUtcRange, utcToBrtTime } from "@/lib/datetime";
 
 interface Appointment {
   id: string;
@@ -39,27 +40,19 @@ export function AppointmentsList() {
     queryKey: ["dashboard_appointments", organizationId],
     refetchInterval: 30000,
     queryFn: async (): Promise<Appointment[]> => {
-      // BRT = UTC-3: "today" in BRT starts at 03:00 UTC
-      const now = new Date();
-      const brtNow = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-      const yyyy = brtNow.getUTCFullYear();
-      const mm = String(brtNow.getUTCMonth() + 1).padStart(2, "0");
-      const dd = String(brtNow.getUTCDate()).padStart(2, "0");
-      const todayStart = `${yyyy}-${mm}-${dd}T03:00:00+00:00`;
-      const nextDay = new Date(Date.UTC(yyyy, brtNow.getUTCMonth(), brtNow.getUTCDate() + 1));
-      const tomorrowEnd = `${nextDay.getUTCFullYear()}-${String(nextDay.getUTCMonth() + 1).padStart(2, "0")}-${String(nextDay.getUTCDate()).padStart(2, "0")}T02:59:59+00:00`;
+      const { startUTC, endUTC } = getBrtUtcRange(new Date());
       
       let query = supabase
         .from("agendamentos")
-        .select("id, patient_name, paciente_nome, doctor_name, profissional, time, data_inicio, notes, status");
+        .select("id, patient_name, paciente_nome, doctor_name, profissional, time, data_inicio, notes, status, titulo");
 
       if (organizationId) {
         query = query.eq("organization_id", organizationId);
       }
 
       const { data, error } = await query
-        .gte("data_inicio", todayStart)
-        .lte("data_inicio", tomorrowEnd)
+        .gte("data_inicio", startUTC)
+        .lte("data_inicio", endUTC)
         .order("data_inicio", { ascending: true, nullsFirst: false });
 
       if (error) {
@@ -68,15 +61,9 @@ export function AppointmentsList() {
       }
 
       return (data || []).map((item: any) => {
-        const name = item.paciente_nome || item.patient_name || "Paciente";
+        const name = item.paciente_nome || item.patient_name || item.titulo || "Paciente";
         const doctor = item.profissional || item.doctor_name || "A definir";
-        let time = item.time || "--:--";
-        if (item.data_inicio) {
-          const d = new Date(item.data_inicio);
-          // Convert to BRT (UTC-3)
-          d.setHours(d.getHours() - 3);
-          time = d.toISOString().slice(11, 16);
-        }
+        const time = item.data_inicio ? utcToBrtTime(item.data_inicio) : (item.time || "--:--");
         return {
           id: item.id,
           patient: name,
