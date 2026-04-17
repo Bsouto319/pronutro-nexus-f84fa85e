@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useOrganization } from "@/hooks/useOrganization";
 import { toast } from "sonner";
+import { getBrtMonthUtcRange, utcToBrtDate, utcToBrtTime } from "@/lib/datetime";
 
 type AppointmentItem = {
   id: string;
@@ -47,42 +48,7 @@ const toLocalDateInputValue = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-const getMonthRange = (date: Date) => {
-  const start = new Date(date.getFullYear(), date.getMonth(), 1);
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  return {
-    from: toLocalDateInputValue(start),
-    to: toLocalDateInputValue(end),
-  };
-};
-
 const formatDateBR = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
-
-// Normalize PostgreSQL timestamptz format to valid ISO 8601 for reliable parsing.
-// PostgreSQL may return "2026-04-14 20:00:00+00" (space, short offset).
-// JS requires "2026-04-14T20:00:00+00:00" (T separator, full offset).
-const normalizeTimestamp = (utcStr: string): string =>
-  utcStr
-    .replace(" ", "T")                       // space → T
-    .replace(/([+-]\d{2})$/, "$1:00");       // +00 → +00:00
-
-// Convert UTC timestamp to BRT (UTC-3) date string "YYYY-MM-DD"
-const utcToBRTDate = (utcStr: string): string => {
-  const d = new Date(normalizeTimestamp(utcStr));
-  if (isNaN(d.getTime())) return "";
-  const brtMs = d.getTime() - 3 * 60 * 60 * 1000;
-  const brt = new Date(brtMs);
-  return `${brt.getUTCFullYear()}-${String(brt.getUTCMonth() + 1).padStart(2, "0")}-${String(brt.getUTCDate()).padStart(2, "0")}`;
-};
-
-// Convert UTC timestamp to BRT time string "HH:mm"
-const utcToBRTTime = (utcStr: string): string => {
-  const d = new Date(normalizeTimestamp(utcStr));
-  if (isNaN(d.getTime())) return "Sem horário";
-  const brtMs = d.getTime() - 3 * 60 * 60 * 1000;
-  const brt = new Date(brtMs);
-  return `${String(brt.getUTCHours()).padStart(2, "0")}:${String(brt.getUTCMinutes()).padStart(2, "0")}`;
-};
 
 const Agenda = () => {
   const { organizationId } = useOrganization();
@@ -104,32 +70,24 @@ const Agenda = () => {
   const [formNotes, setFormNotes] = useState("");
 
   const dateStr = toLocalDateInputValue(selectedDate);
-  const monthRange = useMemo(() => getMonthRange(visibleMonth), [visibleMonth]);
+  const monthRange = useMemo(() => getBrtMonthUtcRange(visibleMonth), [visibleMonth]);
 
   const { data: agendamentos = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["agendamentos", organizationId, monthRange.from, monthRange.to],
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      // BRT = UTC-3: first day of month in BRT starts at 03:00 UTC of that day
-      // Last day ends at 02:59:59 UTC of the next day
-      const fromUTC = `${monthRange.from}T03:00:00+00:00`;
-      // Add 1 day to end of month for the UTC cutoff
-      const endDate = new Date(`${monthRange.to}T12:00:00`);
-      endDate.setDate(endDate.getDate() + 1);
-      const toUTC = `${toLocalDateInputValue(endDate)}T02:59:59+00:00`;
-
       let query = supabase
         .from("agendamentos")
-        .select("id, paciente_nome, paciente_telefone, doctor_name, data_inicio, status, source, notes");
+        .select("id, patient_name, paciente_nome, paciente_telefone, doctor_name, profissional, data_inicio, status, source, notes, titulo");
 
       if (organizationId) {
         query = query.eq("organization_id", organizationId);
       }
 
       const { data, error } = await query
-        .gte("data_inicio", fromUTC)
-        .lte("data_inicio", toUTC)
+        .gte("data_inicio", monthRange.startUTC)
+        .lte("data_inicio", monthRange.endUTC)
         .order("data_inicio", { ascending: true });
 
       if (error) {
@@ -145,7 +103,7 @@ const Agenda = () => {
   const dayAppointments = useMemo(
     () => agendamentos.filter((item) => {
       if (!item.data_inicio) return false;
-      return utcToBRTDate(item.data_inicio) === dateStr;
+      return utcToBrtDate(item.data_inicio) === dateStr;
     }),
     [agendamentos, dateStr],
   );
@@ -154,7 +112,7 @@ const Agenda = () => {
     () => [...new Set(
       agendamentos
         .filter(item => item.data_inicio)
-        .map(item => utcToBRTDate(item.data_inicio!))
+        .map(item => utcToBrtDate(item.data_inicio!))
     )].map(date => new Date(`${date}T12:00:00`)),
     [agendamentos],
   );
@@ -167,10 +125,10 @@ const Agenda = () => {
     setFormPatient(appt.paciente_nome || "");
     setFormPhone(appt.paciente_telefone || "");
     setFormDoctor(appt.doctor_name || "");
-    setFormTime(appt.data_inicio ? utcToBRTTime(appt.data_inicio) : "");
+    setFormTime(appt.data_inicio ? utcToBrtTime(appt.data_inicio) : "");
     setFormStatus(appt.status);
     setFormNotes(appt.notes || "");
-    const brtDate = appt.data_inicio ? utcToBRTDate(appt.data_inicio) : toLocalDateInputValue(new Date());
+    const brtDate = appt.data_inicio ? utcToBrtDate(appt.data_inicio) : toLocalDateInputValue(new Date());
     setSelectedDate(new Date(`${brtDate}T12:00:00`));
     setEditOpen(true);
   };
@@ -444,11 +402,10 @@ const Agenda = () => {
                           </p>
                           <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:flex-wrap md:items-center md:gap-4">
                             <span className="inline-flex items-center gap-2"><UserRound className="w-4 h-4" /> Paciente</span>
-                            {appointment.doctor_name && <span className="inline-flex items-center gap-2"><Stethoscope className="w-4 h-4" /> Dr(a). {appointment.doctor_name}</span>}
-                            {/* Bug 2: converter data_inicio UTC para BRT */}
+                            {(appointment.doctor_name || appointment.profissional) && <span className="inline-flex items-center gap-2"><Stethoscope className="w-4 h-4" /> Dr(a). {appointment.doctor_name || appointment.profissional}</span>}
                             <span className="inline-flex items-center gap-2">
                               <Clock3 className="w-4 h-4" />
-                              {appointment.data_inicio ? utcToBRTTime(appointment.data_inicio) : "Sem horário"}
+                              {appointment.data_inicio ? utcToBrtTime(appointment.data_inicio) : "Sem horário"}
                             </span>
                           </div>
                         </div>
