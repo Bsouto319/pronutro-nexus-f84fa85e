@@ -36,16 +36,14 @@ Deno.serve(async (req) => {
     const safe = (s: unknown, max = 255): string | null =>
       typeof s === "string" && s.trim() ? s.trim().slice(0, max) : null;
 
-    // Resolve patient name: try multiple fields
-    const patient_name = safe(body.paciente_nome) || safe(body.patient_name) || safe(body.paciente) || safe(body.nome) || safe(body.name) || safe(body.summary) || "Paciente não identificado";
+    const patient_name = safe(body.paciente_nome) || safe(body.patient_name) || safe(body.name) || safe(body.paciente) || safe(body.nome) || safe(body.summary) || "Paciente não identificado";
     const doctor_name = safe(body.profissional) || safe(body.doctor_name) || safe(body.medico) || safe(body.doctor);
     const rawDate = body.date || body.data || new Date().toISOString().split("T")[0];
     const time = safe(body.time || body.horario || body.hora);
     const rawStatus = body.status || "confirmado";
     const source = safe(body.source || body.channel || "google_calendar");
     const notes = safe(body.notes || body.observacoes || body.description || body.last_message, 2000);
-    // Resolve phone: try multiple fields
-    const phone = safe(body.paciente_telefone) || safe(body.phone) || safe(body.patient_phone) || safe(body.telefone) || safe(body.whatsapp) || safe(body.numero);
+    const phone = safe(body.paciente_telefone) || safe(body.patient_phone) || safe(body.phone) || safe(body.telefone) || safe(body.whatsapp) || safe(body.numero);
     const channel = safe(body.channel) || (phone ? "whatsapp" : null);
     const data_inicio = body.data_inicio || null;
     const data_fim = body.data_fim || null;
@@ -91,7 +89,7 @@ Deno.serve(async (req) => {
     console.log("Agendamento created:", data.id);
 
     // Always upsert lead - find by phone first, then by name
-    const leadStatus = status === "confirmado" ? "agendado" : status === "cancelado" ? "perdido" : "novo_lead";
+    const leadStatus = status === "cancelado" ? "perdido" : "agendado";
     let existingLead = null;
 
     if (phone) {
