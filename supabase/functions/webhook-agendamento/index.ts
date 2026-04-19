@@ -31,7 +31,30 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const ORG_ID = "65777d18-1126-481d-93d9-169237388d7f";
+
+    // Resolve organization_id: 1) payload, 2) DEFAULT_ORG_ID env, 3) first org in DB (single-tenant fallback)
+    let ORG_ID: string | null =
+      (typeof body.organization_id === "string" && body.organization_id) ||
+      (typeof body.org_id === "string" && body.org_id) ||
+      Deno.env.get("DEFAULT_ORG_ID") ||
+      null;
+
+    if (!ORG_ID) {
+      const { data: firstOrg } = await supabase
+        .from("organizations")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      ORG_ID = firstOrg?.id ?? null;
+    }
+
+    if (!ORG_ID) {
+      return new Response(JSON.stringify({ success: false, error: "organization_id not provided and no organization found" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const safe = (s: unknown, max = 255): string | null =>
       typeof s === "string" && s.trim() ? s.trim().slice(0, max) : null;
