@@ -468,6 +468,45 @@ export type Database = {
           },
         ]
       }
+      org_subscriptions: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          id: string
+          last_payment_date: string | null
+          last_payment_value: number | null
+          monthly_value: number
+          notes: string | null
+          organization_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          last_payment_date?: string | null
+          last_payment_value?: number | null
+          monthly_value?: number
+          notes?: string | null
+          organization_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          last_payment_date?: string | null
+          last_payment_value?: number | null
+          monthly_value?: number
+          notes?: string | null
+          organization_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -654,13 +693,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_org_blocked: { Args: { _org_id: string }; Returns: boolean }
       is_org_member: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "manager" | "doctor" | "staff"
+      app_role: "admin" | "manager" | "doctor" | "staff" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -788,7 +829,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "manager", "doctor", "staff"],
+      app_role: ["admin", "manager", "doctor", "staff", "super_admin"],
     },
   },
 } as const

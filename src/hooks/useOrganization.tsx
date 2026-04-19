@@ -5,21 +5,25 @@ import { useAuth } from "@/hooks/useAuth";
 interface OrgContextType {
   organizationId: string | null;
   loading: boolean;
+  isBlocked: boolean;
 }
 
 const OrgContext = createContext<OrgContextType>({
   organizationId: null,
   loading: true,
+  isBlocked: false,
 });
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       setOrganizationId(null);
+      setIsBlocked(false);
       setLoading(false);
       return;
     }
@@ -33,10 +37,20 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         .limit(1)
         .maybeSingle();
 
-      if (error) {
-        if (import.meta.env.DEV) console.warn("Error fetching organization:", error.message);
+      if (error && import.meta.env.DEV) console.warn("Error fetching organization:", error.message);
+      const orgId = data?.organization_id ?? null;
+      setOrganizationId(orgId);
+
+      if (orgId) {
+        const { data: sub } = await supabase
+          .from("org_subscriptions")
+          .select("status")
+          .eq("organization_id", orgId)
+          .maybeSingle();
+        setIsBlocked(sub?.status === "blocked");
+      } else {
+        setIsBlocked(false);
       }
-      setOrganizationId(data?.organization_id ?? null);
       setLoading(false);
     };
 
@@ -44,7 +58,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <OrgContext.Provider value={{ organizationId, loading }}>
+    <OrgContext.Provider value={{ organizationId, loading, isBlocked }}>
       {children}
     </OrgContext.Provider>
   );
