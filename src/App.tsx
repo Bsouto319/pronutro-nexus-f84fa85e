@@ -18,6 +18,8 @@ import Kanban from "./pages/Kanban";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
+import Admin from "./pages/Admin";
+import Blocked from "./pages/Blocked";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,8 @@ const App = () => (
                 <Route path="/integracoes" element={<ProtectedRoute><Integracoes /></ProtectedRoute>} />
                 <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
                 <Route path="/kanban" element={<ProtectedRoute><Kanban /></ProtectedRoute>} />
+                <Route path="/blocked" element={<Blocked />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>

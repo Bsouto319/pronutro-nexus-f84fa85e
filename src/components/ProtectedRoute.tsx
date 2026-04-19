@@ -1,11 +1,14 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
-  const { organizationId, loading: orgLoading } = useOrganization();
+  const { isBlocked, loading: orgLoading } = useOrganization();
+  const { isSuperAdmin } = useSuperAdmin();
+  const location = useLocation();
 
   if (authLoading || orgLoading) {
     return (
@@ -15,11 +18,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  if (!user) return <Navigate to="/auth" replace />;
 
-  // Don't force onboarding redirect — allow pages to work without org
+  // Super admin bypasses block
+  if (isBlocked && !isSuperAdmin && location.pathname !== "/blocked") {
+    return <Navigate to="/blocked" replace />;
+  }
 
   return <>{children}</>;
 }
