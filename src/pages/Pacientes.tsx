@@ -4,7 +4,7 @@ import { Users, Search, Plus, Filter, Trash2, User, Phone, CreditCard, Mail, Cal
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
@@ -16,11 +16,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { loadDraft, saveDraft, clearDraft } from "@/lib/draft";
+
+const DRAFT_KEY = "patient-new";
+type PatientDraft = {
+  name: string; phone: string; email: string; cpf: string; birthDate: string;
+  referral: string; payment: string; doctorId: string;
+};
+const EMPTY_PATIENT: PatientDraft = {
+  name: "", phone: "", email: "", cpf: "", birthDate: "",
+  referral: "", payment: "Pix", doctorId: "",
+};
 
 const Pacientes = () => {
   const { patients, doctors, isLoading } = useFinanceData();
   const { user } = useAuth();
+  const { organizationId } = useOrganization();
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +41,11 @@ const Pacientes = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [editPatient, setEditPatient] = useState<typeof patients[0] | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<PatientDraft>(EMPTY_PATIENT);
   const queryClient = useQueryClient();
+
+  useEffect(() => { setDraft(loadDraft<PatientDraft>(DRAFT_KEY, EMPTY_PATIENT)); }, []);
+  useEffect(() => { saveDraft(DRAFT_KEY, draft); }, [draft]);
 
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
