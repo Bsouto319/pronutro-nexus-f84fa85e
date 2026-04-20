@@ -59,31 +59,29 @@ const Pacientes = () => {
 
   const handleAddPatient = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user) { toast.error("Você precisa estar logado."); return; }
+    if (!user || !organizationId) { toast.error("Você precisa estar logado e ter uma organização."); return; }
+    if (!draft.name.trim()) { toast.error("Nome é obrigatório."); return; }
     setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
     try {
-      const { data: orgMember } = await supabase
-        .from("organization_members").select("organization_id").eq("user_id", user.id).single();
-      if (!orgMember) throw new Error("Usuário não possui organização.");
-
       const { error } = await supabase.from("clinic_patients").insert([{
-        name: formData.get("name") as string,
-        phone: (formData.get("phone") as string) || null,
-        email: (formData.get("email") as string) || null,
-        cpf: (formData.get("cpf") as string) || null,
-        birth_date: (formData.get("birthDate") as string) || null,
-        referral: (formData.get("referral") as string) || null,
-        payment_method: formData.get("payment") as string,
-        doctor_id: (formData.get("doctorId") as string) || null,
-        organization_id: orgMember.organization_id,
+        name: draft.name.trim(),
+        phone: draft.phone || null,
+        email: draft.email || null,
+        cpf: draft.cpf || null,
+        birth_date: draft.birthDate || null,
+        referral: draft.referral || null,
+        payment_method: draft.payment,
+        doctor_id: draft.doctorId || null,
+        organization_id: organizationId,
       }]);
       if (error) throw error;
       toast.success("Paciente cadastrado com sucesso!");
       setOpen(false);
+      clearDraft(DRAFT_KEY);
+      setDraft(EMPTY_PATIENT);
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
-    } catch {
-      toast.error("Erro ao cadastrar paciente.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao cadastrar paciente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -96,10 +94,13 @@ const Pacientes = () => {
       if (error) throw error;
       toast.success("Paciente removido.");
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
-    } catch {
-      toast.error("Erro ao remover paciente.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao remover paciente.");
     }
   };
+
+  const set = <K extends keyof PatientDraft>(k: K, v: PatientDraft[K]) =>
+    setDraft((d) => ({ ...d, [k]: v }));
 
   return (
     <AppLayout>
