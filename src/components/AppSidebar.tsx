@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const navItems = [
   { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -23,13 +24,18 @@ const navItems = [
   { title: "Agenda", path: "/agenda", icon: Calendar },
   { title: "Médicos", path: "/medicos", icon: Stethoscope },
   { title: "Procedimentos", path: "/procedimentos", icon: FileText },
-  { title: "Financeiro", path: "/financeiro", icon: TrendingUp },
+  { title: "Financeiro", path: "/financeiro", icon: TrendingUp, restricted: "finance" as const },
   { title: "Integrações", path: "/integracoes", icon: Zap },
   { title: "Configurações", path: "/configuracoes", icon: Settings },
 ];
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const { canAccessFinance, loading: roleLoading } = useUserRole();
+  const visibleNavItems = navItems.filter((it) => {
+    if (it.restricted === "finance") return roleLoading ? false : canAccessFinance;
+    return true;
+  });
 
   return (
     <>
@@ -102,7 +108,7 @@ export function AppSidebar() {
 
         {/* Nav */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <RouterNavLink
               key={item.path}
               to={item.path}

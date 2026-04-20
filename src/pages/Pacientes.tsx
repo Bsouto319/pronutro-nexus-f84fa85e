@@ -4,7 +4,7 @@ import { Users, Search, Plus, Filter, Trash2, User, Phone, CreditCard, Mail, Cal
 import { useFinanceData } from "@/hooks/useFinanceData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
@@ -16,11 +16,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { loadDraft, saveDraft, clearDraft } from "@/lib/draft";
+
+const DRAFT_KEY = "patient-new";
+type PatientDraft = {
+  name: string; phone: string; email: string; cpf: string; birthDate: string;
+  referral: string; payment: string; doctorId: string;
+};
+const EMPTY_PATIENT: PatientDraft = {
+  name: "", phone: "", email: "", cpf: "", birthDate: "",
+  referral: "", payment: "Pix", doctorId: "",
+};
 
 const Pacientes = () => {
   const { patients, doctors, isLoading } = useFinanceData();
   const { user } = useAuth();
+  const { organizationId } = useOrganization();
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +41,11 @@ const Pacientes = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [editPatient, setEditPatient] = useState<typeof patients[0] | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<PatientDraft>(EMPTY_PATIENT);
   const queryClient = useQueryClient();
+
+  useEffect(() => { setDraft(loadDraft<PatientDraft>(DRAFT_KEY, EMPTY_PATIENT)); }, []);
+  useEffect(() => { saveDraft(DRAFT_KEY, draft); }, [draft]);
 
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -42,31 +59,29 @@ const Pacientes = () => {
 
   const handleAddPatient = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user) { toast.error("Você precisa estar logado."); return; }
+    if (!user || !organizationId) { toast.error("Você precisa estar logado e ter uma organização."); return; }
+    if (!draft.name.trim()) { toast.error("Nome é obrigatório."); return; }
     setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
     try {
-      const { data: orgMember } = await supabase
-        .from("organization_members").select("organization_id").eq("user_id", user.id).single();
-      if (!orgMember) throw new Error("Usuário não possui organização.");
-
       const { error } = await supabase.from("clinic_patients").insert([{
-        name: formData.get("name") as string,
-        phone: (formData.get("phone") as string) || null,
-        email: (formData.get("email") as string) || null,
-        cpf: (formData.get("cpf") as string) || null,
-        birth_date: (formData.get("birthDate") as string) || null,
-        referral: (formData.get("referral") as string) || null,
-        payment_method: formData.get("payment") as string,
-        doctor_id: (formData.get("doctorId") as string) || null,
-        organization_id: orgMember.organization_id,
+        name: draft.name.trim(),
+        phone: draft.phone || null,
+        email: draft.email || null,
+        cpf: draft.cpf || null,
+        birth_date: draft.birthDate || null,
+        referral: draft.referral || null,
+        payment_method: draft.payment,
+        doctor_id: draft.doctorId || null,
+        organization_id: organizationId,
       }]);
       if (error) throw error;
       toast.success("Paciente cadastrado com sucesso!");
       setOpen(false);
+      clearDraft(DRAFT_KEY);
+      setDraft(EMPTY_PATIENT);
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
-    } catch {
-      toast.error("Erro ao cadastrar paciente.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao cadastrar paciente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,10 +94,13 @@ const Pacientes = () => {
       if (error) throw error;
       toast.success("Paciente removido.");
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
-    } catch {
-      toast.error("Erro ao remover paciente.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao remover paciente.");
     }
   };
+
+  const set = <K extends keyof PatientDraft>(k: K, v: PatientDraft[K]) =>
+    setDraft((d) => ({ ...d, [k]: v }));
 
   return (
     <AppLayout>
@@ -118,52 +136,52 @@ const Pacientes = () => {
                   <form onSubmit={handleAddPatient} className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2 space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
+                        <Label>Nome Completo *</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input id="name" name="name" placeholder="Nome do paciente" className="pl-10 glass" required />
+                          <Input value={draft.name} onChange={(e) => set("name", e.target.value)} placeholder="Nome do paciente" className="pl-10 glass" required />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Telefone / WhatsApp</Label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="phone" placeholder="(00) 00000-0000" className="pl-10 glass" />
+                          <Input value={draft.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(00) 00000-0000" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>E-mail</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="email" type="email" placeholder="email@exemplo.com" className="pl-10 glass" />
+                          <Input value={draft.email} onChange={(e) => set("email", e.target.value)} type="email" placeholder="email@exemplo.com" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>CPF</Label>
                         <div className="relative">
                           <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="cpf" placeholder="000.000.000-00" className="pl-10 glass" />
+                          <Input value={draft.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Data de Nascimento</Label>
                         <div className="relative">
                           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="birthDate" type="date" className="pl-10 glass" />
+                          <Input value={draft.birthDate} onChange={(e) => set("birthDate", e.target.value)} type="date" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Indicação</Label>
                         <div className="relative">
                           <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="referral" placeholder="Quem indicou?" className="pl-10 glass" />
+                          <Input value={draft.referral} onChange={(e) => set("referral", e.target.value)} placeholder="Quem indicou?" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Método de Pagamento</Label>
                         <div className="relative">
                           <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                          <Select name="payment" defaultValue="Pix">
+                          <Select value={draft.payment} onValueChange={(v) => set("payment", v)}>
                             <SelectTrigger className="pl-10 glass"><SelectValue /></SelectTrigger>
                             <SelectContent className="glass">
                               <SelectItem value="Pix">Pix</SelectItem>
@@ -176,7 +194,7 @@ const Pacientes = () => {
                       </div>
                       <div className="col-span-2 space-y-2">
                         <Label>Médico Responsável</Label>
-                        <Select name="doctorId">
+                        <Select value={draft.doctorId} onValueChange={(v) => set("doctorId", v)}>
                           <SelectTrigger className="glass"><SelectValue placeholder="Selecione um médico" /></SelectTrigger>
                           <SelectContent className="glass">
                             {doctors.map(doc => <SelectItem key={doc.id} value={doc.id}>{doc.name}</SelectItem>)}
@@ -184,8 +202,11 @@ const Pacientes = () => {
                         </Select>
                       </div>
                     </div>
-                    <DialogFooter className="pt-4">
-                      <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+                    <DialogFooter className="pt-4 gap-2">
+                      <Button type="button" variant="ghost" onClick={() => { clearDraft(DRAFT_KEY); setDraft(EMPTY_PATIENT); }}>
+                        Limpar
+                      </Button>
+                      <Button type="submit" className="gradient-primary" disabled={isSubmitting}>
                         {isSubmitting ? "Cadastrando..." : "Confirmar Cadastro"}
                       </Button>
                     </DialogFooter>

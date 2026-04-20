@@ -137,6 +137,7 @@ export type Database = {
           patients_count: number
           phone: string | null
           revenue: number
+          schedule: Json | null
           specialty: string | null
           working_days: string | null
           working_hours: string | null
@@ -154,6 +155,7 @@ export type Database = {
           patients_count?: number
           phone?: string | null
           revenue?: number
+          schedule?: Json | null
           specialty?: string | null
           working_days?: string | null
           working_hours?: string | null
@@ -171,6 +173,7 @@ export type Database = {
           patients_count?: number
           phone?: string | null
           revenue?: number
+          schedule?: Json | null
           specialty?: string | null
           working_days?: string | null
           working_hours?: string | null

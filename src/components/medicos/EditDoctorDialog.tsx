@@ -3,11 +3,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { User, Phone, Mail, Award, FileText, Clock, DollarSign } from "lucide-react";
+import { User, Phone, Mail, Award, FileText, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { DoctorScheduleEditor, DEFAULT_SCHEDULE, WeekSchedule } from "@/components/medicos/DoctorScheduleEditor";
 
 interface EditDoctorDialogProps {
   open: boolean;
@@ -20,8 +21,8 @@ export function EditDoctorDialog({ open, onOpenChange, doctor }: EditDoctorDialo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "", specialty: "", crm: "", phone: "", email: "",
-    bio: "", working_days: "", working_hours: "",
-    commission_percent: "0", notes: "",
+    bio: "", commission_percent: "0", notes: "",
+    schedule: DEFAULT_SCHEDULE as WeekSchedule,
   });
 
   useEffect(() => {
@@ -33,10 +34,11 @@ export function EditDoctorDialog({ open, onOpenChange, doctor }: EditDoctorDialo
         phone: doctor.phone || "",
         email: doctor.email || "",
         bio: doctor.bio || "",
-        working_days: doctor.working_days || "",
-        working_hours: doctor.working_hours || "",
         commission_percent: String(doctor.commission_percent || 0),
         notes: doctor.notes || "",
+        schedule: (doctor.schedule && Object.keys(doctor.schedule).length > 0)
+          ? doctor.schedule
+          : DEFAULT_SCHEDULE,
       });
     }
   }, [doctor]);
@@ -52,10 +54,9 @@ export function EditDoctorDialog({ open, onOpenChange, doctor }: EditDoctorDialo
         phone: form.phone || null,
         email: form.email || null,
         bio: form.bio || null,
-        working_days: form.working_days || null,
-        working_hours: form.working_hours || null,
         commission_percent: parseFloat(form.commission_percent) || 0,
         notes: form.notes || null,
+        schedule: form.schedule as any,
       }).eq("id", doctor.id);
 
       if (error) throw error;
@@ -63,8 +64,7 @@ export function EditDoctorDialog({ open, onOpenChange, doctor }: EditDoctorDialo
       queryClient.invalidateQueries({ queryKey: ["clinic_doctors"] });
       onOpenChange(false);
     } catch (err: any) {
-      if (import.meta.env.DEV) console.error(err);
-      toast.error("Erro ao atualizar médico.");
+      toast.error(err?.message || "Erro ao atualizar médico.");
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +72,7 @@ export function EditDoctorDialog({ open, onOpenChange, doctor }: EditDoctorDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-display font-bold">Perfil do Médico</DialogTitle>
           <DialogDescription>Cadastro completo do profissional.</DialogDescription>
@@ -115,25 +115,14 @@ export function EditDoctorDialog({ open, onOpenChange, doctor }: EditDoctorDialo
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Dias de Trabalho</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={form.working_days} onChange={e => setForm(f => ({ ...f, working_days: e.target.value }))} placeholder="Seg, Ter, Qua..." className="pl-10" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Horário</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={form.working_hours} onChange={e => setForm(f => ({ ...f, working_hours: e.target.value }))} placeholder="08:00 - 18:00" className="pl-10" />
-              </div>
-            </div>
-            <div className="space-y-2">
               <Label>Comissão (%)</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input value={form.commission_percent} onChange={e => setForm(f => ({ ...f, commission_percent: e.target.value }))} type="number" step="0.5" min="0" max="100" className="pl-10" />
               </div>
+            </div>
+            <div className="col-span-2">
+              <DoctorScheduleEditor value={form.schedule} onChange={(s) => setForm(f => ({ ...f, schedule: s }))} />
             </div>
             <div className="col-span-2 space-y-2">
               <Label>Bio / Sobre</Label>

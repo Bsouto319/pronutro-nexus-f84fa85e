@@ -8,13 +8,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { motion } from "framer-motion";
 import { EditDoctorDialog } from "@/components/medicos/EditDoctorDialog";
+import { DoctorScheduleEditor, DEFAULT_SCHEDULE, WeekSchedule } from "@/components/medicos/DoctorScheduleEditor";
+import { loadDraft, saveDraft, clearDraft } from "@/lib/draft";
 
 const colors = [
   "from-primary to-info",
@@ -25,15 +27,35 @@ const colors = [
   "from-chart-5 to-chart-4",
 ];
 
+const DRAFT_KEY = "doctor-new";
+
+type DoctorDraft = {
+  name: string; specialty: string; crm: string; phone: string; email: string;
+  bio: string; commission: string; schedule: WeekSchedule;
+};
+
+const EMPTY_DRAFT: DoctorDraft = {
+  name: "", specialty: "", crm: "", phone: "", email: "",
+  bio: "", commission: "0", schedule: DEFAULT_SCHEDULE,
+};
+
 const Medicos = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<DoctorDraft>(EMPTY_DRAFT);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { organizationId } = useOrganization();
+
+  // Carrega rascunho persistido
+  useEffect(() => {
+    setDraft(loadDraft<DoctorDraft>(DRAFT_KEY, EMPTY_DRAFT));
+  }, []);
+  // Salva rascunho continuamente
+  useEffect(() => { saveDraft(DRAFT_KEY, draft); }, [draft]);
 
   const { data: doctors = [], isLoading } = useQuery({
     queryKey: ["clinic_doctors", organizationId],
@@ -50,28 +72,29 @@ const Medicos = () => {
 
   const handleAddDoctor = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !organizationId) { toast.error("Você precisa estar logado."); return; }
+    if (!user || !organizationId) { toast.error("Você precisa estar logado e ter uma organização."); return; }
+    if (!draft.name.trim()) { toast.error("Nome é obrigatório."); return; }
     setIsSubmitting(true);
-    const fd = new FormData(e.currentTarget);
     try {
       const { error } = await supabase.from("clinic_doctors").insert([{
-        name: fd.get("name") as string,
-        specialty: fd.get("specialty") as string || null,
-        crm: fd.get("crm") as string || null,
-        phone: fd.get("phone") as string || null,
-        email: fd.get("email") as string || null,
-        bio: fd.get("bio") as string || null,
-        working_days: fd.get("working_days") as string || null,
-        working_hours: fd.get("working_hours") as string || null,
-        commission_percent: parseFloat(fd.get("commission") as string || "0"),
+        name: draft.name.trim(),
+        specialty: draft.specialty || null,
+        crm: draft.crm || null,
+        phone: draft.phone || null,
+        email: draft.email || null,
+        bio: draft.bio || null,
+        commission_percent: parseFloat(draft.commission) || 0,
+        schedule: draft.schedule as any,
         organization_id: organizationId,
       }]);
       if (error) throw error;
       toast.success("Médico cadastrado com sucesso!");
       setAddOpen(false);
+      clearDraft(DRAFT_KEY);
+      setDraft(EMPTY_DRAFT);
       queryClient.invalidateQueries({ queryKey: ["clinic_doctors"] });
-    } catch {
-      toast.error("Erro ao cadastrar médico.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao cadastrar médico.");
     } finally {
       setIsSubmitting(false);
     }
@@ -86,12 +109,15 @@ const Medicos = () => {
       toast.success("Médico removido!");
       setDeleteOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clinic_doctors"] });
-    } catch {
-      toast.error("Erro ao remover médico.");
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao remover médico.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const set = <K extends keyof DoctorDraft>(k: K, v: DoctorDraft[K]) =>
+    setDraft((d) => ({ ...d, [k]: v }));
 
   return (
     <AppLayout>
@@ -112,73 +138,65 @@ const Medicos = () => {
             <DialogTrigger asChild>
               <Button className="gradient-primary"><Plus className="w-4 h-4 mr-2" /> Novo Médico</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Cadastrar Novo Profissional</DialogTitle>
-                <DialogDescription>Preencha o cadastro completo do médico.</DialogDescription>
+                <DialogDescription>Preencha o cadastro completo. O rascunho é salvo automaticamente.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleAddDoctor} className="space-y-4 py-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
-                    <Label htmlFor="name">Nome Completo *</Label>
+                    <Label>Nome Completo *</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input id="name" name="name" placeholder="Ex: Dr. João Silva" className="pl-10" required />
+                      <Input value={draft.name} onChange={(e) => set("name", e.target.value)} placeholder="Ex: Dr. João Silva" className="pl-10" required />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Especialidade</Label>
                     <div className="relative">
                       <Award className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input name="specialty" placeholder="Ex: Nutrologia" className="pl-10" />
+                      <Input value={draft.specialty} onChange={(e) => set("specialty", e.target.value)} placeholder="Ex: Nutrologia" className="pl-10" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>CRM</Label>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input name="crm" placeholder="CRM/UF 000000" className="pl-10" />
+                      <Input value={draft.crm} onChange={(e) => set("crm", e.target.value)} placeholder="CRM/UF 000000" className="pl-10" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Telefone</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input name="phone" placeholder="(00) 00000-0000" className="pl-10" />
+                      <Input value={draft.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(00) 00000-0000" className="pl-10" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>E-mail</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input name="email" type="email" className="pl-10" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Dias de Trabalho</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input name="working_days" placeholder="Seg, Ter, Qua..." className="pl-10" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Horário</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input name="working_hours" placeholder="08:00 - 18:00" className="pl-10" />
+                      <Input value={draft.email} onChange={(e) => set("email", e.target.value)} type="email" className="pl-10" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Comissão (%)</Label>
-                    <Input name="commission" type="number" step="0.5" min="0" max="100" defaultValue="0" />
+                    <Input value={draft.commission} onChange={(e) => set("commission", e.target.value)} type="number" step="0.5" min="0" max="100" />
+                  </div>
+                  <div className="col-span-2">
+                    <DoctorScheduleEditor value={draft.schedule} onChange={(s) => set("schedule", s)} />
                   </div>
                   <div className="col-span-2 space-y-2">
                     <Label>Bio / Sobre</Label>
-                    <Textarea name="bio" placeholder="Formação, experiência, cursos..." rows={2} />
+                    <Textarea value={draft.bio} onChange={(e) => set("bio", e.target.value)} placeholder="Formação, experiência, cursos..." rows={2} />
                   </div>
                 </div>
-                <DialogFooter className="pt-2">
-                  <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+                <DialogFooter className="pt-2 gap-2">
+                  <Button type="button" variant="ghost" onClick={() => { clearDraft(DRAFT_KEY); setDraft(EMPTY_DRAFT); }}>
+                    Limpar
+                  </Button>
+                  <Button type="submit" className="gradient-primary" disabled={isSubmitting}>
                     {isSubmitting ? "Cadastrando..." : "Confirmar Cadastro"}
                   </Button>
                 </DialogFooter>
@@ -223,9 +241,9 @@ const Medicos = () => {
                 <p className="text-base font-display font-bold text-foreground truncate">{doc.name}</p>
                 <p className="text-sm text-muted-foreground truncate mt-0.5">{doc.specialty || "Sem especialidade"}</p>
                 {doc.crm && <p className="text-xs text-muted-foreground mt-1">CRM: {doc.crm}</p>}
-                {doc.working_days && (
+                {doc.schedule && Object.keys(doc.schedule || {}).length > 0 && (
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {doc.working_days} {doc.working_hours && `• ${doc.working_hours}`}
+                    <Clock className="w-3 h-3" /> Horários configurados
                   </p>
                 )}
                 <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30 text-xs text-muted-foreground">
