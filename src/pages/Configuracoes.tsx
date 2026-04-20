@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getInvalidWebhookReason, getStoredWebhookUrl, saveWebhookUrl } from "@/lib/n8n-webhook";
+import { TeamManagement } from "@/components/TeamManagement";
 const Configuracoes = () => {
   const { organizationId } = useOrganization();
   const { user } = useAuth();
@@ -166,13 +167,17 @@ const Configuracoes = () => {
             <div className="glass rounded-2xl p-6 border border-border/40 space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground mb-1">Gerenciar Equipe</h2>
-                <p className="text-sm text-muted-foreground">Convide membros para acessar sua clínica.</p>
+                <p className="text-sm text-muted-foreground">Convide membros e defina os papéis de acesso.</p>
               </div>
               <InviteTeamDialog />
-              <div className="text-xs text-muted-foreground">
-                <p>• O membro precisa ter uma conta cadastrada no sistema.</p>
-                <p>• Após o convite, ele terá acesso aos dados da sua clínica.</p>
-                <p>• Funções disponíveis: Atendente, Médico, Gerente.</p>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>• <strong>Atendente / Secretária:</strong> não acessa o módulo Financeiro.</p>
+                <p>• <strong>Gerente:</strong> acesso total, incluindo Financeiro.</p>
+                <p>• <strong>Administrador:</strong> acesso total + gestão de equipe.</p>
+              </div>
+              <div className="pt-4 border-t border-border/30">
+                <h3 className="font-semibold text-foreground mb-3">Membros da Organização</h3>
+                <TeamManagement />
               </div>
             </div>
           </TabsContent>
