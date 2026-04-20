@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { OrganizationProvider } from "@/hooks/useOrganization";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { FinanceGuard } from "@/components/FinanceGuard";
 import Index from "./pages/Index";
 import Financeiro from "./pages/Financeiro";
 import Pacientes from "./pages/Pacientes";
@@ -43,7 +44,7 @@ const App = () => (
                 <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
                 <Route path="/medicos" element={<ProtectedRoute><Medicos /></ProtectedRoute>} />
                 <Route path="/procedimentos" element={<ProtectedRoute><Procedimentos /></ProtectedRoute>} />
-                <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
+                <Route path="/financeiro" element={<ProtectedRoute><FinanceGuard><Financeiro /></FinanceGuard></ProtectedRoute>} />
                 <Route path="/integracoes" element={<ProtectedRoute><Integracoes /></ProtectedRoute>} />
                 <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
                 <Route path="/kanban" element={<ProtectedRoute><Kanban /></ProtectedRoute>} />
