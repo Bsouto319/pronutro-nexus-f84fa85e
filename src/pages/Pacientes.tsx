@@ -136,52 +136,52 @@ const Pacientes = () => {
                   <form onSubmit={handleAddPatient} className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2 space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
+                        <Label>Nome Completo *</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input id="name" name="name" placeholder="Nome do paciente" className="pl-10 glass" required />
+                          <Input value={draft.name} onChange={(e) => set("name", e.target.value)} placeholder="Nome do paciente" className="pl-10 glass" required />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Telefone / WhatsApp</Label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="phone" placeholder="(00) 00000-0000" className="pl-10 glass" />
+                          <Input value={draft.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(00) 00000-0000" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>E-mail</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="email" type="email" placeholder="email@exemplo.com" className="pl-10 glass" />
+                          <Input value={draft.email} onChange={(e) => set("email", e.target.value)} type="email" placeholder="email@exemplo.com" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>CPF</Label>
                         <div className="relative">
                           <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="cpf" placeholder="000.000.000-00" className="pl-10 glass" />
+                          <Input value={draft.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Data de Nascimento</Label>
                         <div className="relative">
                           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="birthDate" type="date" className="pl-10 glass" />
+                          <Input value={draft.birthDate} onChange={(e) => set("birthDate", e.target.value)} type="date" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Indicação</Label>
                         <div className="relative">
                           <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input name="referral" placeholder="Quem indicou?" className="pl-10 glass" />
+                          <Input value={draft.referral} onChange={(e) => set("referral", e.target.value)} placeholder="Quem indicou?" className="pl-10 glass" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Método de Pagamento</Label>
                         <div className="relative">
                           <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                          <Select name="payment" defaultValue="Pix">
+                          <Select value={draft.payment} onValueChange={(v) => set("payment", v)}>
                             <SelectTrigger className="pl-10 glass"><SelectValue /></SelectTrigger>
                             <SelectContent className="glass">
                               <SelectItem value="Pix">Pix</SelectItem>
@@ -194,7 +194,7 @@ const Pacientes = () => {
                       </div>
                       <div className="col-span-2 space-y-2">
                         <Label>Médico Responsável</Label>
-                        <Select name="doctorId">
+                        <Select value={draft.doctorId} onValueChange={(v) => set("doctorId", v)}>
                           <SelectTrigger className="glass"><SelectValue placeholder="Selecione um médico" /></SelectTrigger>
                           <SelectContent className="glass">
                             {doctors.map(doc => <SelectItem key={doc.id} value={doc.id}>{doc.name}</SelectItem>)}
@@ -202,8 +202,11 @@ const Pacientes = () => {
                         </Select>
                       </div>
                     </div>
-                    <DialogFooter className="pt-4">
-                      <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+                    <DialogFooter className="pt-4 gap-2">
+                      <Button type="button" variant="ghost" onClick={() => { clearDraft(DRAFT_KEY); setDraft(EMPTY_PATIENT); }}>
+                        Limpar
+                      </Button>
+                      <Button type="submit" className="gradient-primary" disabled={isSubmitting}>
                         {isSubmitting ? "Cadastrando..." : "Confirmar Cadastro"}
                       </Button>
                     </DialogFooter>
