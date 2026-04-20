@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Shield, Users, Building2, DollarSign, AlertCircle, CheckCircle2, Ban, Clock, Search, LogOut } from "lucide-react";
+import { Loader2, Shield, Users, Building2, DollarSign, AlertCircle, CheckCircle2, Ban, Clock, Search, LogOut, UserPlus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,8 @@ export default function Admin() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<OrgRow | null>(null);
+  const [ownerOrg, setOwnerOrg] = useState<OrgRow | null>(null);
+  const [newClientOpen, setNewClientOpen] = useState(false);
 
   const { data: orgs = [], isLoading } = useQuery({
     queryKey: ["admin-orgs"],
@@ -131,7 +133,10 @@ export default function Admin() {
               <p className="text-sm text-muted-foreground">Gestão de clientes e cobrança</p>
             </div>
           </div>
-          <Button variant="outline" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sair</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setNewClientOpen(true)}><Plus className="w-4 h-4 mr-2" />Nova clínica + dono</Button>
+            <Button variant="outline" onClick={signOut}><LogOut className="w-4 h-4 mr-2" />Sair</Button>
+          </div>
         </div>
 
         {/* KPIs */}
@@ -182,6 +187,9 @@ export default function Admin() {
                       <Button size="sm" variant="outline" onClick={() => quickStatus(org, "blocked")} disabled={org.status === "blocked"}>
                         <Ban className="w-4 h-4 mr-1" />Bloquear
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => setOwnerOrg(org)}>
+                        <UserPlus className="w-4 h-4 mr-1" />Promover dono
+                      </Button>
                       <Button size="sm" onClick={() => setEditing(org)}>Editar</Button>
                     </div>
                   </div>
@@ -195,8 +203,110 @@ export default function Admin() {
         )}
 
         <EditDialog org={editing} onClose={() => setEditing(null)} onSaved={() => qc.invalidateQueries({ queryKey: ["admin-orgs"] })} />
+        <AssignOwnerDialog org={ownerOrg} onClose={() => setOwnerOrg(null)} onSaved={() => qc.invalidateQueries({ queryKey: ["admin-orgs"] })} />
+        <NewClientDialog open={newClientOpen} onClose={() => setNewClientOpen(false)} onSaved={() => qc.invalidateQueries({ queryKey: ["admin-orgs"] })} />
       </div>
     </div>
+  );
+}
+
+function AssignOwnerDialog({ org, onClose, onSaved }: { org: OrgRow | null; onClose: () => void; onSaved: () => void }) {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setEmail(""); }, [org]);
+
+  const submit = async () => {
+    if (!org || !email.trim()) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("assign-org-owner", {
+        body: { email: email.trim(), organization_id: org.id },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success(`${email} agora é admin de ${org.name}`);
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao promover dono");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!org} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Promover dono — {org?.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Informe o e-mail do cliente. Ele precisa ter <strong>criado conta</strong> no app antes.
+            Será adicionado à organização e receberá o papel <strong>Admin</strong>.
+          </p>
+          <div>
+            <Label>E-mail do dono</Label>
+            <Input type="email" placeholder="cliente@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>Cancelar</Button>
+          <Button onClick={submit} disabled={busy || !email.trim()}>
+            {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Promover a Admin
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function NewClientDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
+  const [clinicName, setClinicName] = useState("");
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (!open) { setClinicName(""); setEmail(""); } }, [open]);
+
+  const submit = async () => {
+    if (!clinicName.trim() || !email.trim()) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("assign-org-owner", {
+        body: { email: email.trim(), create_org_name: clinicName.trim() },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast.success(`Clínica "${clinicName}" criada e ${email} promovido a Admin`);
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao criar cliente");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Nova clínica + dono</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Cria a organização e já vincula o dono como Admin. O e-mail informado precisa ter conta criada no app.
+          </p>
+          <div>
+            <Label>Nome da clínica</Label>
+            <Input value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Ex: Clínica Estética Beleza" />
+          </div>
+          <div>
+            <Label>E-mail do dono</Label>
+            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="cliente@email.com" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>Cancelar</Button>
+          <Button onClick={submit} disabled={busy || !clinicName.trim() || !email.trim()}>
+            {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Criar e promover
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
