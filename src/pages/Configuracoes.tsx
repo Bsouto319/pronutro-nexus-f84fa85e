@@ -165,18 +165,31 @@ const Configuracoes = () => {
 
           <TabsContent value="team">
             <div className="glass rounded-2xl p-6 border border-border/40 space-y-6">
-              <div>
-                <h2 className="text-lg font-display font-bold text-foreground mb-1">Gerenciar Equipe</h2>
-                <p className="text-sm text-muted-foreground">Convide membros e defina os papéis de acesso.</p>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-display font-bold text-foreground mb-1">Gerenciar Equipe</h2>
+                  <p className="text-sm text-muted-foreground">Convide membros e defina o nível de acesso de cada um.</p>
+                </div>
+                <InviteTeamDialog />
               </div>
-              <InviteTeamDialog />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>• <strong>Atendente / Secretária:</strong> não acessa o módulo Financeiro.</p>
-                <p>• <strong>Gerente:</strong> acesso total, incluindo Financeiro.</p>
-                <p>• <strong>Administrador:</strong> acesso total + gestão de equipe.</p>
+
+              <div className="grid sm:grid-cols-3 gap-2 text-xs">
+                <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                  <p className="font-semibold text-amber-700 mb-1">👤 Atendente</p>
+                  <p className="text-muted-foreground">Agenda, pacientes, leads. <strong>Sem Financeiro.</strong></p>
+                </div>
+                <div className="p-3 rounded-lg border border-blue-500/30 bg-blue-500/5">
+                  <p className="font-semibold text-blue-600 mb-1">💼 Gerente</p>
+                  <p className="text-muted-foreground">Tudo + Financeiro completo.</p>
+                </div>
+                <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+                  <p className="font-semibold text-primary mb-1">👑 Administrador</p>
+                  <p className="text-muted-foreground">Tudo + gestão de equipe e clínica.</p>
+                </div>
               </div>
+
               <div className="pt-4 border-t border-border/30">
-                <h3 className="font-semibold text-foreground mb-3">Membros da Organização</h3>
+                <h3 className="font-semibold text-foreground mb-3">Membros da clínica</h3>
                 <TeamManagement />
               </div>
             </div>
