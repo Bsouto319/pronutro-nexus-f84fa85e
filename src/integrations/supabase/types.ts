@@ -541,22 +541,73 @@ export type Database = {
       }
       organizations: {
         Row: {
+          address_cep: string | null
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          cnpj: string | null
+          contact_email: string | null
           created_at: string
           id: string
+          legal_name: string | null
+          logo_url: string | null
           name: string
+          onboarding_completed: boolean
+          owner_cpf: string | null
+          owner_name: string | null
+          owner_role: string | null
+          phone: string | null
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
           created_at?: string
           id?: string
+          legal_name?: string | null
+          logo_url?: string | null
           name: string
+          onboarding_completed?: boolean
+          owner_cpf?: string | null
+          owner_name?: string | null
+          owner_role?: string | null
+          phone?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
+          address_cep?: string | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
           created_at?: string
           id?: string
+          legal_name?: string | null
+          logo_url?: string | null
           name?: string
+          onboarding_completed?: boolean
+          owner_cpf?: string | null
+          owner_name?: string | null
+          owner_role?: string | null
+          phone?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -664,6 +715,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
