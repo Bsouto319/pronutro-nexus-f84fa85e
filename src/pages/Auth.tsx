@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -9,59 +9,70 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogOut, AlertCircle } from "lucide-react";
 
 const Auth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  // Detecta erro vindo do callback OAuth na URL
+  useEffect(() => {
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (hash.includes("error=") || search.includes("error=")) {
+      const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : search);
+      const desc = params.get("error_description") || params.get("error") || "Falha ao entrar com Google";
+      setOauthError(decodeURIComponent(desc.replace(/\+/g, " ")));
+    }
+  }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <button onClick={signOut} className="text-xs text-muted-foreground hover:text-destructive underline">
+          Demorando muito? Sair e tentar novamente
+        </button>
       </div>
     );
   }
 
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (user) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
+    setOauthError(null);
     try {
       if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
-        toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+        toast.success("E-mail de recuperação enviado!");
         setMode("login");
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("Login realizado com sucesso!");
+        toast.success("Login realizado!");
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email, password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Conta criada com sucesso!");
+        toast.success("Conta criada! Verifique seu e-mail.");
       }
     } catch (error: any) {
-      if (import.meta.env.DEV) console.error(error);
-      const msg = error?.message?.includes("Invalid login")
-        ? "E-mail ou senha incorretos."
-        : error?.message?.includes("already registered")
-          ? "Este e-mail já está cadastrado."
-          : "Erro ao processar solicitação.";
+      const m = error?.message || "";
+      const msg = m.includes("Invalid login") ? "E-mail ou senha incorretos."
+        : m.includes("already registered") ? "Este e-mail já está cadastrado."
+        : m.includes("Email not confirmed") ? "Confirme seu e-mail antes de entrar."
+        : m || "Erro ao processar solicitação.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -69,18 +80,30 @@ const Auth = () => {
   };
 
   const handleGoogleLogin = async () => {
+    setOauthError(null);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
       });
       if (result.error) {
-        toast.error("Erro ao entrar com Google.");
-        if (import.meta.env.DEV) console.error(result.error);
+        const m = (result.error as any)?.message || "Erro ao entrar com Google.";
+        setOauthError(m);
+        toast.error(m);
       }
-    } catch (error) {
-      toast.error("Erro ao conectar com Google.");
-      if (import.meta.env.DEV) console.error(error);
+    } catch (error: any) {
+      const m = error?.message || "Erro ao conectar com Google.";
+      setOauthError(m);
+      toast.error(m);
     }
+  };
+
+  const fullReset = async () => {
+    try { await supabase.auth.signOut(); } catch {}
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith("sb-") || k.includes("supabase")).forEach(k => localStorage.removeItem(k));
+    } catch {}
+    window.location.href = "/auth";
   };
 
   return (
@@ -93,14 +116,24 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {oauthError && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm">
+              <div className="flex items-start gap-2 text-destructive">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">Não foi possível entrar</p>
+                  <p className="text-xs text-destructive/80 mt-0.5">{oauthError}</p>
+                  <button onClick={fullReset} className="text-xs underline mt-2 inline-flex items-center gap-1">
+                    <LogOut className="w-3 h-3" /> Limpar sessão e tentar de novo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {mode !== "forgot" && (
             <>
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={handleGoogleLogin}
-                type="button"
-              >
+              <Button variant="outline" className="w-full gap-2" onClick={handleGoogleLogin} type="button">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -120,51 +153,31 @@ const Auth = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                required
-              />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
             </div>
             {mode !== "forgot" && (
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
               </div>
             )}
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              {mode === "login" ? "Entrar" : mode === "signup" ? "Cadastrar" : "Enviar link de recuperação"}
+              {mode === "login" ? "Entrar" : mode === "signup" ? "Cadastrar" : "Enviar link"}
             </Button>
           </form>
 
           <div className="flex flex-col items-center gap-1 mt-2">
             {mode === "login" && (
-              <button
-                type="button"
-                onClick={() => setMode("forgot")}
-                className="text-xs text-muted-foreground hover:text-primary underline"
-              >
+              <button type="button" onClick={() => setMode("forgot")} className="text-xs text-muted-foreground hover:text-primary underline">
                 Esqueceu sua senha?
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setMode(mode === "signup" ? "login" : mode === "login" ? "signup" : "login")}
-              className="text-sm text-muted-foreground hover:text-primary underline"
-            >
+            <button type="button" onClick={() => setMode(mode === "signup" ? "login" : mode === "login" ? "signup" : "login")} className="text-sm text-muted-foreground hover:text-primary underline">
               {mode === "login" ? "Não tem conta? Cadastre-se" : mode === "signup" ? "Já tem conta? Faça login" : "Voltar ao login"}
+            </button>
+            <button type="button" onClick={fullReset} className="text-[11px] text-muted-foreground/60 hover:text-destructive underline mt-2 inline-flex items-center gap-1">
+              <LogOut className="w-3 h-3" /> Limpar sessão travada
             </button>
           </div>
         </CardContent>
