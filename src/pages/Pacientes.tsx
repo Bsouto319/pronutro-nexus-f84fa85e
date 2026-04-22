@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
+import { PatientSummaryHover } from "@/components/pacientes/PatientSummaryHover";
 import { EditPatientDialog } from "@/components/pacientes/EditPatientDialog";
 import { FollowUpPanel } from "@/components/pacientes/FollowUpPanel";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -245,8 +246,17 @@ const Pacientes = () => {
                         <motion.tr key={patient.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.03 }} className="hover:bg-muted/20 transition-colors group">
                           <td className="p-4">
-                            <p className="font-medium text-foreground">{patient.name}</p>
-                            {(patient as any).email && <p className="text-xs text-muted-foreground">{(patient as any).email}</p>}
+                            <PatientSummaryHover patient={patient}>
+                              <button
+                                onClick={() => { setSelectedPatient(patient); setHistoryOpen(true); }}
+                                className="text-left group/name"
+                              >
+                                <p className="font-medium text-foreground group-hover/name:text-primary transition-colors">
+                                  {patient.name}
+                                </p>
+                                {(patient as any).email && <p className="text-xs text-muted-foreground">{(patient as any).email}</p>}
+                              </button>
+                            </PatientSummaryHover>
                           </td>
                           <td className="p-4 text-sm text-muted-foreground font-mono">{(patient as any).phone || "—"}</td>
                           <td className="p-4 text-sm text-muted-foreground">{getDoctorName(patient.doctor_id)}</td>
