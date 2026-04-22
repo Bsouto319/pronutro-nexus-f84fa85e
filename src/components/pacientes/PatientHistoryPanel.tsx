@@ -107,27 +107,55 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
     if (!patient || !organizationId) return;
     setIsSubmitting(true);
     const fd = new FormData(e.currentTarget);
+    const value = parseFloat((fd.get("value") as string) || "0");
+    const date = (fd.get("date") as string) || new Date().toISOString().split("T")[0];
+    const procedure = (fd.get("procedure") as string) || null;
+    const payment = (fd.get("payment") as string) || null;
+    const doctorId = (fd.get("doctorId") as string) || patient.doctor_id || null;
+    const doctorName = doctorId ? (doctors.find(d => d.id === doctorId)?.name || null) : null;
+
     try {
       const { error } = await supabase.from("patient_consultations").insert([{
         organization_id: organizationId,
         patient_id: patient.id,
-        doctor_id: (fd.get("doctorId") as string) || patient.doctor_id || null,
-        consultation_date: (fd.get("date") as string) || new Date().toISOString().split("T")[0],
-        procedure_name: fd.get("procedure") as string || null,
-        procedure_value: parseFloat((fd.get("value") as string) || "0"),
-        payment_method: fd.get("payment") as string || null,
-        medications: fd.get("medications") as string || null,
-        quantities: fd.get("quantities") as string || null,
-        notes: fd.get("notes") as string || null,
+        doctor_id: doctorId,
+        consultation_date: date,
+        procedure_name: procedure,
+        procedure_value: value,
+        payment_method: payment,
+        medications: (fd.get("medications") as string) || null,
+        quantities: (fd.get("quantities") as string) || null,
+        notes: (fd.get("notes") as string) || null,
       }]);
       if (error) throw error;
+
       await supabase.from("clinic_patients")
-        .update({ total: totalInvested + parseFloat((fd.get("value") as string) || "0") })
+        .update({ total: totalInvested + value })
         .eq("id", patient.id);
-      toast.success("Consulta registrada!");
+
+      // 💰 Lança automaticamente no Financeiro como entrada
+      if (value > 0) {
+        const { error: txErr } = await supabase.from("financial_transactions").insert([{
+          organization_id: organizationId,
+          type: "entrada",
+          date,
+          payment_date: date,
+          description: `Consulta — ${procedure || "Atendimento"} (${patient.name})`,
+          patient: patient.name,
+          doctor: doctorName,
+          payment_method: payment,
+          category: "consulta",
+          value_in: value,
+          value_out: 0,
+        }]);
+        if (txErr && import.meta.env.DEV) console.warn("Erro ao lançar no financeiro:", txErr.message);
+      }
+
+      toast.success("Consulta registrada e lançada no Financeiro!");
       setAddOpen(false);
       queryClient.invalidateQueries({ queryKey: ["patient_consultations", patient.id] });
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_transactions"] });
     } catch {
       toast.error("Erro ao registrar consulta.");
     } finally {
