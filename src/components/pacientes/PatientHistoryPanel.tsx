@@ -274,12 +274,60 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
             </p>
           </SheetHeader>
 
-          <Tabs defaultValue="prontuario" className="mt-2">
-            <TabsList className="w-full">
-              <TabsTrigger value="prontuario" className="flex-1">Prontuário</TabsTrigger>
-              <TabsTrigger value="notas" className="flex-1">Pré-Anotações</TabsTrigger>
-              <TabsTrigger value="exportar" className="flex-1">Exportar / Enviar</TabsTrigger>
+          {/* Alerta sempre visível se houver alergia */}
+          {clinical.allergies && (
+            <div className="mt-3 flex gap-2 p-2.5 rounded-md bg-destructive/10 border border-destructive/30">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <span className="font-bold text-destructive uppercase tracking-wider">Alergias: </span>
+                <span className="text-foreground">{clinical.allergies}</span>
+              </div>
+            </div>
+          )}
+
+          <Tabs defaultValue="dados" className="mt-3">
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="dados"><Stethoscope className="w-3.5 h-3.5 mr-1" /> Dados</TabsTrigger>
+              <TabsTrigger value="prontuario"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
+              <TabsTrigger value="notas">Pré-notas</TabsTrigger>
+              <TabsTrigger value="exportar">Exportar</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="dados" className="space-y-3 mt-3">
+              <p className="text-xs text-muted-foreground">
+                Dados clínicos importantes — sempre visíveis no resumo do paciente.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1"><Stethoscope className="w-3 h-3" /> Diagnósticos</Label>
+                <Textarea value={clinical.diagnostics} onChange={e => setC("diagnostics", e.target.value)}
+                  placeholder="Digite aqui os principais diagnósticos do paciente..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Pontos-chave da HPP (História Patológica Pregressa)</Label>
+                <Textarea value={clinical.hpp} onChange={e => setC("hpp", e.target.value)}
+                  placeholder="Pontos-chave da história patológica pregressa do paciente..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1"><Pill className="w-3 h-3" /> Medicamentos em uso</Label>
+                <Textarea value={clinical.current_medications} onChange={e => setC("current_medications", e.target.value)}
+                  placeholder="Medicamentos que o paciente está utilizando..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1 text-destructive">
+                  <AlertTriangle className="w-3 h-3" /> Alergias
+                </Label>
+                <Textarea value={clinical.allergies} onChange={e => setC("allergies", e.target.value)}
+                  placeholder="Alergias do paciente (será destacado em vermelho)..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Observações importantes</Label>
+                <Textarea value={clinical.important_notes} onChange={e => setC("important_notes", e.target.value)}
+                  placeholder="Observações importantes sobre esse paciente..." rows={2} className="glass" />
+              </div>
+              <Button onClick={saveClinical} className="gradient-primary w-full" disabled={savingClinical}>
+                <Save className="w-4 h-4 mr-2" /> {savingClinical ? "Salvando..." : "Salvar Dados Clínicos"}
+              </Button>
+            </TabsContent>
 
             <TabsContent value="prontuario" className="space-y-3 mt-3">
               <Button size="sm" className="gradient-primary" onClick={() => setAddOpen(true)}>
