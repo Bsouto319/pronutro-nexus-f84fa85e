@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -57,9 +57,32 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
   const [savingClinical, setSavingClinical] = useState(false);
 
   // Hidrata dados clínicos sempre que troca de paciente / abre o painel
-  useState(() => {});
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useState; // noop guard
+  useEffect(() => {
+    if (patient && open) {
+      setPreNotes(patient.pre_notes || "");
+      setClinical({
+        diagnostics: patient.diagnostics || "",
+        hpp: patient.hpp || "",
+        current_medications: patient.current_medications || "",
+        allergies: patient.allergies || "",
+        important_notes: patient.important_notes || "",
+      });
+    }
+  }, [patient?.id, open]);
+
+  const saveClinical = async () => {
+    if (!patient) return;
+    setSavingClinical(true);
+    const { error } = await supabase.from("clinic_patients").update(clinical).eq("id", patient.id);
+    setSavingClinical(false);
+    if (error) { toast.error("Erro ao salvar dados clínicos."); return; }
+    queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
+    queryClient.invalidateQueries({ queryKey: ["patient_summary", patient.id] });
+    toast.success("Dados clínicos salvos!");
+  };
+
+  const setC = <K extends keyof ClinicalData>(k: K, v: string) =>
+    setClinical((c) => ({ ...c, [k]: v }));
 
   const { data: consultations = [], isLoading } = useQuery({
     queryKey: ["patient_consultations", patient?.id],
