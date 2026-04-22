@@ -190,12 +190,17 @@ export type Database = {
       }
       clinic_patients: {
         Row: {
+          allergies: string | null
           birth_date: string | null
           cpf: string | null
           created_at: string
+          current_medications: string | null
+          diagnostics: string | null
           doctor_id: string | null
           email: string | null
+          hpp: string | null
           id: string
+          important_notes: string | null
           name: string
           organization_id: string
           payment_method: string | null
@@ -205,12 +210,17 @@ export type Database = {
           total: number
         }
         Insert: {
+          allergies?: string | null
           birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          current_medications?: string | null
+          diagnostics?: string | null
           doctor_id?: string | null
           email?: string | null
+          hpp?: string | null
           id?: string
+          important_notes?: string | null
           name: string
           organization_id: string
           payment_method?: string | null
@@ -220,12 +230,17 @@ export type Database = {
           total?: number
         }
         Update: {
+          allergies?: string | null
           birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          current_medications?: string | null
+          diagnostics?: string | null
           doctor_id?: string | null
           email?: string | null
+          hpp?: string | null
           id?: string
+          important_notes?: string | null
           name?: string
           organization_id?: string
           payment_method?: string | null

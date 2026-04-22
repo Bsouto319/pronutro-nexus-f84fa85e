@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -8,18 +8,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt } from "lucide-react";
+import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt, AlertTriangle, Stethoscope, History, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PatientHistoryPanelProps {
-  patient: { id: string; name: string; doctor_id: string | null; phone?: string | null; email?: string | null; cpf?: string | null; pre_notes?: string | null } | null;
+  patient: any | null;
   doctors: { id: string; name: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+interface ClinicalData {
+  diagnostics: string;
+  hpp: string;
+  current_medications: string;
+  allergies: string;
+  important_notes: string;
+}
+const EMPTY_CLINICAL: ClinicalData = {
+  diagnostics: "", hpp: "", current_medications: "", allergies: "", important_notes: "",
+};
 
 interface Consultation {
   id: string;
@@ -42,6 +53,36 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
   const [addOpen, setAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preNotes, setPreNotes] = useState("");
+  const [clinical, setClinical] = useState<ClinicalData>(EMPTY_CLINICAL);
+  const [savingClinical, setSavingClinical] = useState(false);
+
+  // Hidrata dados clínicos sempre que troca de paciente / abre o painel
+  useEffect(() => {
+    if (patient && open) {
+      setPreNotes(patient.pre_notes || "");
+      setClinical({
+        diagnostics: patient.diagnostics || "",
+        hpp: patient.hpp || "",
+        current_medications: patient.current_medications || "",
+        allergies: patient.allergies || "",
+        important_notes: patient.important_notes || "",
+      });
+    }
+  }, [patient?.id, open]);
+
+  const saveClinical = async () => {
+    if (!patient) return;
+    setSavingClinical(true);
+    const { error } = await supabase.from("clinic_patients").update(clinical).eq("id", patient.id);
+    setSavingClinical(false);
+    if (error) { toast.error("Erro ao salvar dados clínicos."); return; }
+    queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
+    queryClient.invalidateQueries({ queryKey: ["patient_summary", patient.id] });
+    toast.success("Dados clínicos salvos!");
+  };
+
+  const setC = <K extends keyof ClinicalData>(k: K, v: string) =>
+    setClinical((c) => ({ ...c, [k]: v }));
 
   const { data: consultations = [], isLoading } = useQuery({
     queryKey: ["patient_consultations", patient?.id],
@@ -66,27 +107,55 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
     if (!patient || !organizationId) return;
     setIsSubmitting(true);
     const fd = new FormData(e.currentTarget);
+    const value = parseFloat((fd.get("value") as string) || "0");
+    const date = (fd.get("date") as string) || new Date().toISOString().split("T")[0];
+    const procedure = (fd.get("procedure") as string) || null;
+    const payment = (fd.get("payment") as string) || null;
+    const doctorId = (fd.get("doctorId") as string) || patient.doctor_id || null;
+    const doctorName = doctorId ? (doctors.find(d => d.id === doctorId)?.name || null) : null;
+
     try {
       const { error } = await supabase.from("patient_consultations").insert([{
         organization_id: organizationId,
         patient_id: patient.id,
-        doctor_id: (fd.get("doctorId") as string) || patient.doctor_id || null,
-        consultation_date: (fd.get("date") as string) || new Date().toISOString().split("T")[0],
-        procedure_name: fd.get("procedure") as string || null,
-        procedure_value: parseFloat((fd.get("value") as string) || "0"),
-        payment_method: fd.get("payment") as string || null,
-        medications: fd.get("medications") as string || null,
-        quantities: fd.get("quantities") as string || null,
-        notes: fd.get("notes") as string || null,
+        doctor_id: doctorId,
+        consultation_date: date,
+        procedure_name: procedure,
+        procedure_value: value,
+        payment_method: payment,
+        medications: (fd.get("medications") as string) || null,
+        quantities: (fd.get("quantities") as string) || null,
+        notes: (fd.get("notes") as string) || null,
       }]);
       if (error) throw error;
+
       await supabase.from("clinic_patients")
-        .update({ total: totalInvested + parseFloat((fd.get("value") as string) || "0") })
+        .update({ total: totalInvested + value })
         .eq("id", patient.id);
-      toast.success("Consulta registrada!");
+
+      // 💰 Lança automaticamente no Financeiro como entrada
+      if (value > 0) {
+        const { error: txErr } = await supabase.from("financial_transactions").insert([{
+          organization_id: organizationId,
+          type: "entrada",
+          date,
+          payment_date: date,
+          description: `Consulta — ${procedure || "Atendimento"} (${patient.name})`,
+          patient: patient.name,
+          doctor: doctorName,
+          payment_method: payment,
+          category: "consulta",
+          value_in: value,
+          value_out: 0,
+        }]);
+        if (txErr && import.meta.env.DEV) console.warn("Erro ao lançar no financeiro:", txErr.message);
+      }
+
+      toast.success("Consulta registrada e lançada no Financeiro!");
       setAddOpen(false);
       queryClient.invalidateQueries({ queryKey: ["patient_consultations", patient.id] });
       queryClient.invalidateQueries({ queryKey: ["clinic_patients"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_transactions"] });
     } catch {
       toast.error("Erro ao registrar consulta.");
     } finally {
@@ -205,12 +274,60 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
             </p>
           </SheetHeader>
 
-          <Tabs defaultValue="prontuario" className="mt-2">
-            <TabsList className="w-full">
-              <TabsTrigger value="prontuario" className="flex-1">Prontuário</TabsTrigger>
-              <TabsTrigger value="notas" className="flex-1">Pré-Anotações</TabsTrigger>
-              <TabsTrigger value="exportar" className="flex-1">Exportar / Enviar</TabsTrigger>
+          {/* Alerta sempre visível se houver alergia */}
+          {clinical.allergies && (
+            <div className="mt-3 flex gap-2 p-2.5 rounded-md bg-destructive/10 border border-destructive/30">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <span className="font-bold text-destructive uppercase tracking-wider">Alergias: </span>
+                <span className="text-foreground">{clinical.allergies}</span>
+              </div>
+            </div>
+          )}
+
+          <Tabs defaultValue="dados" className="mt-3">
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="dados"><Stethoscope className="w-3.5 h-3.5 mr-1" /> Dados</TabsTrigger>
+              <TabsTrigger value="prontuario"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
+              <TabsTrigger value="notas">Pré-notas</TabsTrigger>
+              <TabsTrigger value="exportar">Exportar</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="dados" className="space-y-3 mt-3">
+              <p className="text-xs text-muted-foreground">
+                Dados clínicos importantes — sempre visíveis no resumo do paciente.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1"><Stethoscope className="w-3 h-3" /> Diagnósticos</Label>
+                <Textarea value={clinical.diagnostics} onChange={e => setC("diagnostics", e.target.value)}
+                  placeholder="Digite aqui os principais diagnósticos do paciente..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Pontos-chave da HPP (História Patológica Pregressa)</Label>
+                <Textarea value={clinical.hpp} onChange={e => setC("hpp", e.target.value)}
+                  placeholder="Pontos-chave da história patológica pregressa do paciente..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1"><Pill className="w-3 h-3" /> Medicamentos em uso</Label>
+                <Textarea value={clinical.current_medications} onChange={e => setC("current_medications", e.target.value)}
+                  placeholder="Medicamentos que o paciente está utilizando..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1 text-destructive">
+                  <AlertTriangle className="w-3 h-3" /> Alergias
+                </Label>
+                <Textarea value={clinical.allergies} onChange={e => setC("allergies", e.target.value)}
+                  placeholder="Alergias do paciente (será destacado em vermelho)..." rows={2} className="glass" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Observações importantes</Label>
+                <Textarea value={clinical.important_notes} onChange={e => setC("important_notes", e.target.value)}
+                  placeholder="Observações importantes sobre esse paciente..." rows={2} className="glass" />
+              </div>
+              <Button onClick={saveClinical} className="gradient-primary w-full" disabled={savingClinical}>
+                <Save className="w-4 h-4 mr-2" /> {savingClinical ? "Salvando..." : "Salvar Dados Clínicos"}
+              </Button>
+            </TabsContent>
 
             <TabsContent value="prontuario" className="space-y-3 mt-3">
               <Button size="sm" className="gradient-primary" onClick={() => setAddOpen(true)}>
