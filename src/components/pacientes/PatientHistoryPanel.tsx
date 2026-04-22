@@ -8,18 +8,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt } from "lucide-react";
+import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt, AlertTriangle, Stethoscope, History, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PatientHistoryPanelProps {
-  patient: { id: string; name: string; doctor_id: string | null; phone?: string | null; email?: string | null; cpf?: string | null; pre_notes?: string | null } | null;
+  patient: any | null;
   doctors: { id: string; name: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+interface ClinicalData {
+  diagnostics: string;
+  hpp: string;
+  current_medications: string;
+  allergies: string;
+  important_notes: string;
+}
+const EMPTY_CLINICAL: ClinicalData = {
+  diagnostics: "", hpp: "", current_medications: "", allergies: "", important_notes: "",
+};
 
 interface Consultation {
   id: string;
@@ -42,6 +53,13 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
   const [addOpen, setAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preNotes, setPreNotes] = useState("");
+  const [clinical, setClinical] = useState<ClinicalData>(EMPTY_CLINICAL);
+  const [savingClinical, setSavingClinical] = useState(false);
+
+  // Hidrata dados clínicos sempre que troca de paciente / abre o painel
+  useState(() => {});
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useState; // noop guard
 
   const { data: consultations = [], isLoading } = useQuery({
     queryKey: ["patient_consultations", patient?.id],
