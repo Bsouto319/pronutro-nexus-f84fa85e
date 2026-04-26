@@ -57,6 +57,15 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
   const [clinical, setClinical] = useState<ClinicalData>(EMPTY_CLINICAL);
   const [savingClinical, setSavingClinical] = useState(false);
 
+  const { data: organization } = useQuery({
+    queryKey: ["organization", organizationId],
+    enabled: !!organizationId && open,
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("*").eq("id", organizationId!).maybeSingle();
+      return data;
+    },
+  });
+
   // Hidrata dados clínicos sempre que troca de paciente / abre o painel
   useEffect(() => {
     if (patient && open) {
