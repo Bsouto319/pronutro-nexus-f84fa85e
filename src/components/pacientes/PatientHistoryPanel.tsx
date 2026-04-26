@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt, AlertTriangle, Stethoscope, History, Save } from "lucide-react";
+import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt, AlertTriangle, Stethoscope, History, Save, FileSignature } from "lucide-react";
 import { motion } from "framer-motion";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PrescriptionsPanel } from "./PrescriptionsPanel";
 
 interface PatientHistoryPanelProps {
   patient: any | null;
