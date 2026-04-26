@@ -17,7 +17,7 @@ import { PrescriptionsPanel } from "./PrescriptionsPanel";
 
 interface PatientHistoryPanelProps {
   patient: any | null;
-  doctors: { id: string; name: string }[];
+  doctors: { id: string; name: string; crm?: string | null }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
