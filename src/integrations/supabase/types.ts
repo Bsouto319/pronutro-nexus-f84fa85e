@@ -693,6 +693,48 @@ export type Database = {
           },
         ]
       }
+      patient_prescriptions: {
+        Row: {
+          cid: string | null
+          content: string
+          created_at: string
+          doctor_id: string | null
+          id: string
+          instructions: string | null
+          issued_date: string
+          organization_id: string
+          patient_id: string
+          prescription_type: string
+          title: string
+        }
+        Insert: {
+          cid?: string | null
+          content: string
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          instructions?: string | null
+          issued_date?: string
+          organization_id: string
+          patient_id: string
+          prescription_type?: string
+          title: string
+        }
+        Update: {
+          cid?: string | null
+          content?: string
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          instructions?: string | null
+          issued_date?: string
+          organization_id?: string
+          patient_id?: string
+          prescription_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       procedures: {
         Row: {
           created_at: string

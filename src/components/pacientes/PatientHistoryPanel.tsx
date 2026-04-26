@@ -8,15 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt, AlertTriangle, Stethoscope, History, Save } from "lucide-react";
+import { Plus, FileDown, FileText, Pill, DollarSign, Calendar, Trash2, Send, Receipt, AlertTriangle, Stethoscope, History, Save, FileSignature } from "lucide-react";
 import { motion } from "framer-motion";
 import { useOrganization } from "@/hooks/useOrganization";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PrescriptionsPanel } from "./PrescriptionsPanel";
 
 interface PatientHistoryPanelProps {
   patient: any | null;
-  doctors: { id: string; name: string }[];
+  doctors: { id: string; name: string; crm?: string | null }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -55,6 +56,15 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
   const [preNotes, setPreNotes] = useState("");
   const [clinical, setClinical] = useState<ClinicalData>(EMPTY_CLINICAL);
   const [savingClinical, setSavingClinical] = useState(false);
+
+  const { data: organization } = useQuery({
+    queryKey: ["organization", organizationId],
+    enabled: !!organizationId && open,
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("*").eq("id", organizationId!).maybeSingle();
+      return data;
+    },
+  });
 
   // Hidrata dados clínicos sempre que troca de paciente / abre o painel
   useEffect(() => {
@@ -286,10 +296,11 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
           )}
 
           <Tabs defaultValue="dados" className="mt-3">
-            <TabsList className="w-full grid grid-cols-4">
+            <TabsList className="w-full grid grid-cols-5">
               <TabsTrigger value="dados"><Stethoscope className="w-3.5 h-3.5 mr-1" /> Dados</TabsTrigger>
               <TabsTrigger value="prontuario"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
-              <TabsTrigger value="notas">Pré-notas</TabsTrigger>
+              <TabsTrigger value="receitas"><FileSignature className="w-3.5 h-3.5 mr-1" /> Receitas</TabsTrigger>
+              <TabsTrigger value="notas">Notas</TabsTrigger>
               <TabsTrigger value="exportar">Exportar</TabsTrigger>
             </TabsList>
 
@@ -379,6 +390,10 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
                   </motion.div>
                 ))
               )}
+            </TabsContent>
+
+            <TabsContent value="receitas" className="mt-3">
+              <PrescriptionsPanel patient={patient} doctors={doctors} organization={organization} />
             </TabsContent>
 
             <TabsContent value="notas" className="space-y-3 mt-3">
