@@ -392,6 +392,10 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
               )}
             </TabsContent>
 
+            <TabsContent value="receitas" className="mt-3">
+              <PrescriptionsPanel patient={patient} doctors={doctors} organization={organization} />
+            </TabsContent>
+
             <TabsContent value="notas" className="space-y-3 mt-3">
               <p className="text-sm text-muted-foreground">Anotações da recepcionista ou pré-consulta (triagem, queixas iniciais, etc.)</p>
               <Textarea
