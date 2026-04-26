@@ -296,10 +296,11 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
           )}
 
           <Tabs defaultValue="dados" className="mt-3">
-            <TabsList className="w-full grid grid-cols-4">
+            <TabsList className="w-full grid grid-cols-5">
               <TabsTrigger value="dados"><Stethoscope className="w-3.5 h-3.5 mr-1" /> Dados</TabsTrigger>
               <TabsTrigger value="prontuario"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
-              <TabsTrigger value="notas">Pré-notas</TabsTrigger>
+              <TabsTrigger value="receitas"><FileSignature className="w-3.5 h-3.5 mr-1" /> Receitas</TabsTrigger>
+              <TabsTrigger value="notas">Notas</TabsTrigger>
               <TabsTrigger value="exportar">Exportar</TabsTrigger>
             </TabsList>
 
