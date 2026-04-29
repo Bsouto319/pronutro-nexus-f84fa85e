@@ -696,6 +696,60 @@ export type Database = {
           },
         ]
       }
+      patient_invoices: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          invoice_number: string | null
+          issue_date: string | null
+          mime_type: string
+          notes: string | null
+          organization_id: string
+          patient_id: string
+          updated_at: string
+          uploaded_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          invoice_number?: string | null
+          issue_date?: string | null
+          mime_type: string
+          notes?: string | null
+          organization_id: string
+          patient_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          invoice_number?: string | null
+          issue_date?: string | null
+          mime_type?: string
+          notes?: string | null
+          organization_id?: string
+          patient_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       patient_prescriptions: {
         Row: {
           cid: string | null

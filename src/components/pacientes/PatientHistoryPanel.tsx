@@ -14,6 +14,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrescriptionsPanel } from "./PrescriptionsPanel";
+import { InvoicesPanel } from "./InvoicesPanel";
 
 interface PatientHistoryPanelProps {
   patient: any | null;
@@ -296,10 +297,11 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
           )}
 
           <Tabs defaultValue="dados" className="mt-3">
-            <TabsList className="w-full grid grid-cols-5">
+            <TabsList className="w-full grid grid-cols-6">
               <TabsTrigger value="dados"><Stethoscope className="w-3.5 h-3.5 mr-1" /> Dados</TabsTrigger>
               <TabsTrigger value="prontuario"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
               <TabsTrigger value="receitas"><FileSignature className="w-3.5 h-3.5 mr-1" /> Receitas</TabsTrigger>
+              <TabsTrigger value="nf"><Receipt className="w-3.5 h-3.5 mr-1" /> NF</TabsTrigger>
               <TabsTrigger value="notas">Notas</TabsTrigger>
               <TabsTrigger value="exportar">Exportar</TabsTrigger>
             </TabsList>
@@ -394,6 +396,10 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
 
             <TabsContent value="receitas" className="mt-3">
               <PrescriptionsPanel patient={patient} doctors={doctors} organization={organization} />
+            </TabsContent>
+
+            <TabsContent value="nf" className="mt-3">
+              <InvoicesPanel patient={patient} doctors={doctors} />
             </TabsContent>
 
             <TabsContent value="notas" className="space-y-3 mt-3">
