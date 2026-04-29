@@ -23,6 +23,7 @@ export type Database = {
           doctor_name: string | null
           google_event_id: string | null
           id: string
+          lembrete_enviado: boolean
           notes: string | null
           organization_id: string
           paciente_nome: string | null
@@ -43,6 +44,7 @@ export type Database = {
           doctor_name?: string | null
           google_event_id?: string | null
           id?: string
+          lembrete_enviado?: boolean
           notes?: string | null
           organization_id: string
           paciente_nome?: string | null
@@ -63,6 +65,7 @@ export type Database = {
           doctor_name?: string | null
           google_event_id?: string | null
           id?: string
+          lembrete_enviado?: boolean
           notes?: string | null
           organization_id?: string
           paciente_nome?: string | null

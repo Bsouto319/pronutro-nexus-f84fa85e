@@ -1,0 +1,2 @@
+ALTER TABLE public.agendamentos
+ADD COLUMN IF NOT EXISTS lembrete_enviado boolean NOT NULL DEFAULT false;
