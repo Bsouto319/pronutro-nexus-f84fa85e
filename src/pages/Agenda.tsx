@@ -167,6 +167,7 @@ const Agenda = () => {
           paciente_telefone: formPhone || null,
           doctor_name: formDoctor || null,
           data_inicio: dataInicio,
+          time: formTime || null,
           status: formStatus,
           notes: formNotes || null,
         })
@@ -215,6 +216,7 @@ const Agenda = () => {
         doctor_name: formDoctor || null,
         profissional: formDoctor || null,
         data_inicio: dataInicio,
+        time: formTime || null,
         status: formStatus,
         notes: formNotes || null,
         source: "manual",
