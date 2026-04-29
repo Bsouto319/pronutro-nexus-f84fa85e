@@ -2,3 +2,6 @@ project_id = "eaxmzueqvgtiajiqcfcn"
 
 [functions.webhook-agendamento]
 verify_jwt = false
+
+[functions.get-patient-invoice]
+verify_jwt = false
