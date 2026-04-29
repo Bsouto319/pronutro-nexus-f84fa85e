@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
-import { getBrtUtcRange, utcToBrtTime } from "@/lib/datetime";
+import { getBrtUtcRange, displayApptTime } from "@/lib/datetime";
 
 interface Appointment {
   id: string;
@@ -63,7 +63,7 @@ export function AppointmentsList() {
       return (data || []).map((item: any) => {
         const name = item.paciente_nome || item.patient_name || item.titulo || "Paciente";
         const doctor = item.profissional || item.doctor_name || "A definir";
-        const time = item.data_inicio ? utcToBrtTime(item.data_inicio) : (item.time || "--:--");
+        const time = displayApptTime(item.time, item.data_inicio);
         return {
           id: item.id,
           patient: name,

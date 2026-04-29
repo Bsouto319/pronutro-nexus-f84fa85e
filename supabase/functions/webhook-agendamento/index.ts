@@ -85,15 +85,32 @@ Deno.serve(async (req) => {
     const VALID_STATUSES = ["confirmado", "pendente", "cancelado"];
     const status = VALID_STATUSES.includes(rawStatus) ? rawStatus : "pendente";
 
+    // Build canonical data_inicio in BRT (-03:00) when we have a local "time" string.
+    // The n8n payload often sends `time` as the real local hour (e.g. "15:00"),
+    // while `data_inicio` may arrive flagged as UTC ("Z") — which would shift to 12:00 BRT.
+    // Prefer combining `date` + `time` as -03:00 for an accurate display.
+    const baseDate = data_inicio
+      ? new Date(data_inicio).toISOString().split("T")[0]
+      : rawDate;
+
+    let canonicalDataInicio: string;
+    if (time && /^\d{2}:\d{2}/.test(time)) {
+      canonicalDataInicio = `${baseDate}T${time.slice(0, 5)}:00-03:00`;
+    } else if (data_inicio) {
+      canonicalDataInicio = data_inicio;
+    } else {
+      canonicalDataInicio = `${rawDate}T12:00:00-03:00`;
+    }
+
     const { data, error } = await supabase.from("agendamentos").insert({
       organization_id: ORG_ID,
       patient_name,
       paciente_nome: patient_name,
       doctor_name,
       profissional: doctor_name,
-      date: data_inicio ? new Date(data_inicio).toISOString().split("T")[0] : rawDate,
+      date: baseDate,
       time,
-      data_inicio: data_inicio || `${rawDate}T12:00:00-03:00`,
+      data_inicio: canonicalDataInicio,
       data_fim,
       titulo,
       valor,

@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useOrganization } from "@/hooks/useOrganization";
 import { toast } from "sonner";
-import { getBrtMonthUtcRange, utcToBrtDate, utcToBrtTime } from "@/lib/datetime";
+import { getBrtMonthUtcRange, utcToBrtDate, utcToBrtTime, displayApptTime } from "@/lib/datetime";
 
 type AppointmentItem = {
   id: string;
@@ -26,6 +26,7 @@ type AppointmentItem = {
   doctor_name: string | null;
   profissional: string | null;
   data_inicio: string | null;
+  time: string | null;
   status: string;
   source: string | null;
   notes: string | null;
@@ -82,7 +83,7 @@ const Agenda = () => {
     queryFn: async () => {
       let query = supabase
         .from("agendamentos")
-        .select("id, patient_name, paciente_nome, paciente_telefone, doctor_name, profissional, data_inicio, status, source, notes, titulo");
+        .select("id, patient_name, paciente_nome, paciente_telefone, doctor_name, profissional, data_inicio, time, status, source, notes, titulo");
 
       if (organizationId) {
         query = query.eq("organization_id", organizationId);
@@ -128,7 +129,7 @@ const Agenda = () => {
     setFormPatient(appt.paciente_nome || "");
     setFormPhone(appt.paciente_telefone || "");
     setFormDoctor(appt.doctor_name || "");
-    setFormTime(appt.data_inicio ? utcToBrtTime(appt.data_inicio) : "");
+    setFormTime(displayApptTime(appt.time, appt.data_inicio) === "Sem horário" ? "" : displayApptTime(appt.time, appt.data_inicio));
     setFormStatus(appt.status);
     setFormNotes(appt.notes || "");
     const brtDate = appt.data_inicio ? utcToBrtDate(appt.data_inicio) : toLocalDateInputValue(new Date());
@@ -166,6 +167,7 @@ const Agenda = () => {
           paciente_telefone: formPhone || null,
           doctor_name: formDoctor || null,
           data_inicio: dataInicio,
+          time: formTime || null,
           status: formStatus,
           notes: formNotes || null,
         })
@@ -214,6 +216,7 @@ const Agenda = () => {
         doctor_name: formDoctor || null,
         profissional: formDoctor || null,
         data_inicio: dataInicio,
+        time: formTime || null,
         status: formStatus,
         notes: formNotes || null,
         source: "manual",
@@ -408,7 +411,7 @@ const Agenda = () => {
                             {(appointment.doctor_name || appointment.profissional) && <span className="inline-flex items-center gap-2"><Stethoscope className="w-4 h-4" /> Dr(a). {appointment.doctor_name || appointment.profissional}</span>}
                             <span className="inline-flex items-center gap-2">
                               <Clock3 className="w-4 h-4" />
-                              {appointment.data_inicio ? utcToBrtTime(appointment.data_inicio) : "Sem horário"}
+                              {displayApptTime(appointment.time, appointment.data_inicio)}
                             </span>
                           </div>
                         </div>
