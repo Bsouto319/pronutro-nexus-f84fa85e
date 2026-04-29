@@ -49,3 +49,18 @@ export function utcToBrtTime(utcStr: string): string {
 
   return `${String(brt.getUTCHours()).padStart(2, "0")}:${String(brt.getUTCMinutes()).padStart(2, "0")}`;
 }
+
+/**
+ * Hora preferencial para exibição de agendamentos.
+ * Prioriza o campo `time` (string "HH:MM" já em horário local BRT) que vem
+ * do Google Calendar / n8n, e só faz fallback para conversão UTC→BRT
+ * quando ele estiver vazio. Isso evita o bug de mostrar 12:00 quando o
+ * payload do n8n traz `data_inicio` marcado como UTC mesmo já sendo BRT.
+ */
+export function displayApptTime(time?: string | null, dataInicio?: string | null): string {
+  if (typeof time === "string" && /^\d{2}:\d{2}/.test(time.trim())) {
+    return time.trim().slice(0, 5);
+  }
+  if (dataInicio) return utcToBrtTime(dataInicio);
+  return "Sem horário";
+}
