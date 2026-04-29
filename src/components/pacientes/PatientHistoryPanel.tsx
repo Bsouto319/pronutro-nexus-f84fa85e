@@ -14,6 +14,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrescriptionsPanel } from "./PrescriptionsPanel";
+import { InvoicesPanel } from "./InvoicesPanel";
 
 interface PatientHistoryPanelProps {
   patient: any | null;
