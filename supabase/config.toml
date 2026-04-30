@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.get-patient-invoice]
 verify_jwt = false
+
+[functions.get-agendamentos-lembrete]
+verify_jwt = false
