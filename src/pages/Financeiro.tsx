@@ -33,9 +33,10 @@ const Financeiro = () => {
         <PeriodFilter value={period} onChange={setPeriod} />
 
         <AICapture />
-        <FinanceImport />
-        <FinanceExport />
+
         <FinanceKPIs period={period} />
+
+        <FinanceCharts />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DoctorRevenue />
@@ -49,9 +50,11 @@ const Financeiro = () => {
 
         <ExpenseCategories />
 
-        <div className="grid grid-cols-1 gap-6">
-          <FinanceCharts />
-          <TransactionsTable period={period} />
+        <TransactionsTable period={period} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FinanceImport />
+          <FinanceExport />
         </div>
       </div>
     </AppLayout>
