@@ -111,7 +111,25 @@ export default function Admin() {
     qc.invalidateQueries({ queryKey: ["admin-orgs"] });
   };
 
-  if (loading) {
+  const exportOrg = async (org: OrgRow) => {
+    try {
+      toast.info(`Exportando dados de ${org.name}...`);
+      const { data, error } = await supabase.functions.invoke("export-org-data", {
+        body: { org_id: org.id },
+      });
+      if (error) throw error;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${org.name.replace(/[^a-z0-9]/gi, "_")}_${format(new Date(), "yyyy-MM-dd")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Dados exportados!");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao exportar");
+    }
+  };
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
