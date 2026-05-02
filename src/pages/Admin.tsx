@@ -4,12 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Shield, Users, Building2, DollarSign, AlertCircle, CheckCircle2, Ban, Clock, Search, LogOut, UserPlus, Plus } from "lucide-react";
+import { Loader2, Shield, Users, Building2, DollarSign, AlertCircle, CheckCircle2, Ban, Clock, Search, LogOut, UserPlus, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -110,6 +111,26 @@ export default function Admin() {
     qc.invalidateQueries({ queryKey: ["admin-orgs"] });
   };
 
+  const exportOrg = async (org: OrgRow) => {
+    try {
+      toast.info(`Exportando dados de ${org.name}...`);
+      const { data, error } = await supabase.functions.invoke("export-org-data", {
+        body: { org_id: org.id },
+      });
+      if (error) throw error;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${org.name.replace(/[^a-z0-9]/gi, "_")}_${format(new Date(), "yyyy-MM-dd")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Dados exportados!");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao exportar");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -189,6 +210,9 @@ export default function Admin() {
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setOwnerOrg(org)}>
                         <UserPlus className="w-4 h-4 mr-1" />Promover dono
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => exportOrg(org)}>
+                        <Download className="w-4 h-4 mr-1" />Exportar dados
                       </Button>
                       <Button size="sm" onClick={() => setEditing(org)}>Editar</Button>
                     </div>
@@ -353,17 +377,22 @@ function EditDialog({ org, onClose, onSaved }: { org: OrgRow | null; onClose: ()
     onClose();
   };
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
   const remove = async () => {
     if (!org) return;
-    if (!confirm(`Excluir PERMANENTEMENTE a organização "${org.name}" e todos os dados?`)) return;
     const { error } = await supabase.from("organizations").delete().eq("id", org.id);
     if (error) return toast.error(error.message);
     toast.success("Organização excluída");
+    setConfirmDelete(false);
+    setConfirmText("");
     onSaved();
     onClose();
   };
 
   return (
+    <>
     <Dialog open={!!org} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>{org?.name}</DialogTitle></DialogHeader>
@@ -389,11 +418,36 @@ function EditDialog({ org, onClose, onSaved }: { org: OrgRow | null; onClose: ()
           <div><Label>Notas</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Observações internas" /></div>
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="destructive" onClick={remove}>Excluir org</Button>
+          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>Excluir org</Button>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={save}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={confirmDelete} onOpenChange={(o) => { if (!o) { setConfirmDelete(false); setConfirmText(""); } }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir "{org?.name}"?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação <strong>não pode ser desfeita</strong>. Todos os dados (pacientes, agendamentos, financeiro, etc.) da organização serão removidos permanentemente.
+            <br /><br />
+            Para confirmar, digite <strong>{org?.name}</strong> abaixo:
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder={org?.name || ""} />
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={remove}
+            disabled={confirmText !== org?.name}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Excluir permanentemente
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
