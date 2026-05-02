@@ -377,17 +377,22 @@ function EditDialog({ org, onClose, onSaved }: { org: OrgRow | null; onClose: ()
     onClose();
   };
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
   const remove = async () => {
     if (!org) return;
-    if (!confirm(`Excluir PERMANENTEMENTE a organização "${org.name}" e todos os dados?`)) return;
     const { error } = await supabase.from("organizations").delete().eq("id", org.id);
     if (error) return toast.error(error.message);
     toast.success("Organização excluída");
+    setConfirmDelete(false);
+    setConfirmText("");
     onSaved();
     onClose();
   };
 
   return (
+    <>
     <Dialog open={!!org} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>{org?.name}</DialogTitle></DialogHeader>
@@ -413,11 +418,36 @@ function EditDialog({ org, onClose, onSaved }: { org: OrgRow | null; onClose: ()
           <div><Label>Notas</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Observações internas" /></div>
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="destructive" onClick={remove}>Excluir org</Button>
+          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>Excluir org</Button>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={save}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={confirmDelete} onOpenChange={(o) => { if (!o) { setConfirmDelete(false); setConfirmText(""); } }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir "{org?.name}"?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação <strong>não pode ser desfeita</strong>. Todos os dados (pacientes, agendamentos, financeiro, etc.) da organização serão removidos permanentemente.
+            <br /><br />
+            Para confirmar, digite <strong>{org?.name}</strong> abaixo:
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder={org?.name || ""} />
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={remove}
+            disabled={confirmText !== org?.name}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Excluir permanentemente
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
