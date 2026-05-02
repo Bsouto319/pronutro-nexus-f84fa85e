@@ -30,8 +30,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Apenas o super admin pode usar
-    if ((user.email || "").toLowerCase() !== SUPER_ADMIN_EMAIL) {
+    // Apenas super_admin pode usar (verifica via tabela user_roles)
+    const adminClientPre = createClient(supabaseUrl, serviceRoleKey);
+    const { data: superRole } = await adminClientPre
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("role", "super_admin")
+      .maybeSingle();
+    if (!superRole) {
       return new Response(JSON.stringify({ error: "Apenas o super admin pode promover donos." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
