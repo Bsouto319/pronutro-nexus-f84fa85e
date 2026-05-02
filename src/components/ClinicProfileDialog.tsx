@@ -120,6 +120,40 @@ export function ClinicProfileDialog({ open, onOpenChange }: Props) {
           </TabsContent>
 
           <TabsContent value="brand" className="space-y-3 pt-4">
+            {!readOnly && (
+              <>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleUpload(f);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                  {uploading ? "Enviando..." : "Enviar arquivo do computador"}
+                </Button>
+                <p className="text-[11px] text-center text-muted-foreground">
+                  PNG, JPG, WEBP ou SVG — máx 2MB. Recomendado quadrado 256×256.
+                </p>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                  <div className="relative flex justify-center text-[11px] uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">ou cole uma URL</span>
+                  </div>
+                </div>
+              </>
+            )}
             <Field label="URL do logo" value={form.logo_url} onChange={(v) => set("logo_url", v)} placeholder="https://..." ro={readOnly} />
             {form.logo_url && (
               <div className="p-4 rounded-lg border bg-muted/20 flex items-center gap-3">
@@ -127,7 +161,7 @@ export function ClinicProfileDialog({ open, onOpenChange }: Props) {
                 <p className="text-xs text-muted-foreground">Pré-visualização — assim aparecerá no menu lateral.</p>
               </div>
             )}
-            <p className="text-xs text-muted-foreground">Cole o link de uma imagem PNG ou JPG quadrada (recomendado 256×256).</p>
+            <p className="text-xs text-muted-foreground">⚠️ Caminhos como <code>file:///</code> não funcionam — use o botão de upload acima.</p>
           </TabsContent>
 
           <TabsContent value="address" className="space-y-3 pt-4">
