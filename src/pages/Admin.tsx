@@ -191,6 +191,9 @@ export default function Admin() {
                       <Button size="sm" variant="outline" onClick={() => setOwnerOrg(org)}>
                         <UserPlus className="w-4 h-4 mr-1" />Promover dono
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => exportOrg(org)}>
+                        <Download className="w-4 h-4 mr-1" />Exportar dados
+                      </Button>
                       <Button size="sm" onClick={() => setEditing(org)}>Editar</Button>
                     </div>
                   </div>
