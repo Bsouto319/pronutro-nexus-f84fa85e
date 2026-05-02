@@ -18,6 +18,34 @@ export function ClinicProfileDialog({ open, onOpenChange }: Props) {
   const { isAdmin } = useUserRole();
   const [form, setForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (file: File) => {
+    if (!organizationId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem (PNG/JPG).");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx 2MB).");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${organizationId}/logo-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("org-logos")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      setUploading(false);
+      return toast.error(upErr.message);
+    }
+    const { data } = supabase.storage.from("org-logos").getPublicUrl(path);
+    set("logo_url", data.publicUrl);
+    setUploading(false);
+    toast.success("Logo enviado! Clique em Salvar para confirmar.");
+  };
 
   useEffect(() => {
     if (organization) setForm(organization);
