@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Shield, Users, Building2, DollarSign, AlertCircle, CheckCircle2, Ban, Clock, Search, LogOut, UserPlus, Plus } from "lucide-react";
+import { Loader2, Shield, Users, Building2, DollarSign, AlertCircle, CheckCircle2, Ban, Clock, Search, LogOut, UserPlus, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
