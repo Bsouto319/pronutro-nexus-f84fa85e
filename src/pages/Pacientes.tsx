@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
+import { PatientImport } from "@/components/pacientes/PatientImport";
 import { PatientSummaryHover } from "@/components/pacientes/PatientSummaryHover";
 import { EditPatientDialog } from "@/components/pacientes/EditPatientDialog";
 import { FollowUpPanel } from "@/components/pacientes/FollowUpPanel";
@@ -114,6 +115,7 @@ const Pacientes = () => {
           </TabsList>
 
           <TabsContent value="pacientes" className="space-y-4 mt-4">
+            <PatientImport />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
