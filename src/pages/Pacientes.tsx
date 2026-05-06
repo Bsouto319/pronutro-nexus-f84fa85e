@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PatientHistoryPanel } from "@/components/pacientes/PatientHistoryPanel";
+import { PatientImport } from "@/components/pacientes/PatientImport";
 import { PatientSummaryHover } from "@/components/pacientes/PatientSummaryHover";
 import { EditPatientDialog } from "@/components/pacientes/EditPatientDialog";
 import { FollowUpPanel } from "@/components/pacientes/FollowUpPanel";
