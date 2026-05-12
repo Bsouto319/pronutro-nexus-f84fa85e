@@ -195,7 +195,7 @@ export function PatientImport() {
           <input
             ref={fileRef}
             type="file"
-            accept=".csv,.txt,.xlsx,.xls"
+            accept=".csv,.txt,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="hidden"
             onChange={handleImport}
           />
