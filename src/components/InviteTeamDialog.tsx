@@ -41,18 +41,22 @@ export function InviteTeamDialog() {
     setSubmitting(true);
 
     try {
-      // Call edge function to invite
       const { data, error } = await supabase.functions.invoke("invite-member", {
         body: { email: email.trim(), role, organization_id: organizationId },
       });
+      const errMsg = (data as any)?.error || error?.message;
+      if (errMsg) throw new Error(errMsg);
 
-      if (error) throw error;
-      toast.success(`Convite enviado para ${email}`);
+      toast.success(
+        (data as any)?.already_member
+          ? `Papel atualizado para ${roleLabels[role]} — ${email}`
+          : `${email} adicionado(a) como ${roleLabels[role]}`
+      );
       setEmail("");
       setOpen(false);
     } catch (error: any) {
       if (import.meta.env.DEV) console.error(error);
-      toast.error("Erro ao enviar convite. O usuário precisa estar cadastrado no sistema.");
+      toast.error(error?.message || "Erro ao convidar. O usuário precisa ter conta criada no app.");
     } finally {
       setSubmitting(false);
     }
