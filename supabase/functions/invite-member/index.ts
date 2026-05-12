@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if already a member
+    // Check if already a member of THIS organization
     const { data: existing } = await adminClient
       .from("organization_members")
       .select("id")
@@ -82,35 +82,39 @@ Deno.serve(async (req) => {
       .eq("organization_id", organization_id)
       .maybeSingle();
 
-    if (existing) {
-      return new Response(JSON.stringify({ error: "Usuário já é membro desta organização" }), {
-        status: 409,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Add as member (only if not yet) — idempotent
+    if (!existing) {
+      const { error: memberError } = await adminClient
+        .from("organization_members")
+        .insert({ user_id: targetUser.id, organization_id });
+      if (memberError) throw memberError;
     }
 
-    // Add as member
-    const { error: memberError } = await adminClient
-      .from("organization_members")
-      .insert({ user_id: targetUser.id, organization_id });
-
-    if (memberError) throw memberError;
-
-    // Assign role
-    if (role && ["staff", "doctor", "manager"].includes(role)) {
+    // Assign role (idempotent): drop previous assignable roles, then insert
+    const ASSIGNABLE = ["staff", "doctor", "manager"];
+    if (role && ASSIGNABLE.includes(role)) {
+      // Remove any existing assignable role to avoid duplicates / conflicts
       await adminClient
         .from("user_roles")
-        .insert({ user_id: targetUser.id, role })
-        .single();
+        .delete()
+        .eq("user_id", targetUser.id)
+        .in("role", ASSIGNABLE);
+
+      const { error: roleError } = await adminClient
+        .from("user_roles")
+        .insert({ user_id: targetUser.id, role });
+      if (roleError) throw roleError;
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "Erro interno" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: true, already_member: !!existing }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (err: any) {
+    console.error("invite-member error:", err);
+    return new Response(
+      JSON.stringify({ error: err?.message || "Erro interno ao convidar membro" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 });
