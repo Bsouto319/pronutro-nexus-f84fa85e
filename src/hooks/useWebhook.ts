@@ -148,43 +148,46 @@ export function useWebhook() {
     return postToWebhook({ action: "addNote", leadId, note });
   }, [postToWebhook]);
 
-  // Upload a file to Supabase Storage and return the public URL.
-  const uploadFile = useCallback(async (file: File, organizationId: string): Promise<string> => {
-    const ext = file.name.split(".").pop() || "bin";
-    const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, "_");
-    const path = `${organizationId}/${Date.now()}-${safeName}`;
-
-    const { error } = await supabase.storage
-      .from("chat-files")
-      .upload(path, file, { contentType: file.type, upsert: false });
-
-    if (error) throw new Error(`Erro ao fazer upload: ${error.message}`);
-
-    const { data } = supabase.storage.from("chat-files").getPublicUrl(path);
-    return data.publicUrl;
-  }, []);
-
-  // Send a file to a lead via WhatsApp (n8n → UAZAPI /sendFile).
+  // Send a file directly to UAZAPI (base64) — no n8n, no Storage needed.
   const sendFile = useCallback(async (
-    leadId: string,
+    _leadId: string,
     phone: string,
     file: File,
-    organizationId: string,
+    _organizationId: string,
     caption?: string,
   ) => {
-    const fileUrl = await uploadFile(file, organizationId);
-    const isDoc = /pdf|doc|xls|csv|txt/i.test(file.name.split(".").pop() || "");
-    return postToWebhook({
-      action: "sendFile",
-      leadId,
-      phone: phone.replace(/\D/g, ""),
-      fileUrl,
-      filename: file.name,
-      caption: caption || file.name,
-      messageType: isDoc ? "document" : "image",
-      mimeType: file.type,
-    });
-  }, [uploadFile, postToWebhook]);
+    const uazapiUrl   = import.meta.env.VITE_UAZAPI_URL   || "https://btechsoutoshop.uazapi.com";
+    const uazapiToken = import.meta.env.VITE_UAZAPI_TOKEN || "066d2ebd-dca0-4b92-a9d4-f2b2e1506584";
 
-  return { webhookUrl, fetchFromWebhook, postToWebhook, getMessages, sendMessage, sendFile, uploadFile, toggleBot, takeOver, addNote };
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+      reader.onerror   = () => reject(new Error("Erro ao ler o arquivo."));
+      reader.readAsDataURL(file);
+    });
+
+    const ext     = (file.name.split(".").pop() || "").toLowerCase();
+    const isDoc   = /pdf|doc|docx|xls|xlsx|csv|txt/.test(ext);
+    const cleanPhone = phone.replace(/\D/g, "");
+
+    const res = await fetch(`${uazapiUrl}/message/sendMedia/${uazapiToken}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone:     cleanPhone,
+        base64,
+        mediatype: isDoc ? "document" : "image",
+        filename:  file.name,
+        caption:   caption || file.name,
+      }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`UAZAPI ${res.status}: ${txt.slice(0, 120)}`);
+    }
+    return res.json().catch(() => null);
+  }, []);
+
+  return { webhookUrl, fetchFromWebhook, postToWebhook, getMessages, sendMessage, sendFile, toggleBot, takeOver, addNote };
 }
