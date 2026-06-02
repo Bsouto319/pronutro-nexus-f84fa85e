@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Bot, UserRound, MessageSquare, User, StickyNote, Phone, Mail } from "lucide-react";
+import { Send, Bot, UserRound, MessageSquare, User, StickyNote, Phone, Mail, Paperclip, Loader2 } from "lucide-react";
 import { useWebhook, WebhookMessage } from "@/hooks/useWebhook";
+import { useOrganization } from "@/hooks/useOrganization";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -37,8 +38,11 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
   const [botActive, setBotActive] = useState(true);
   const [humanTakeover, setHumanTakeover] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { getMessages, sendMessage, toggleBot, takeOver, addNote } = useWebhook();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { getMessages, sendMessage, sendFile, toggleBot, takeOver, addNote } = useWebhook();
+  const { organizationId } = useOrganization();
 
   useEffect(() => {
     if (!lead || !open) return;
@@ -96,6 +100,38 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
     await addNote(lead.id, noteInput);
     setNoteInput("");
     toast.success("Nota adicionada");
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !lead || !organizationId) return;
+
+    const phone = lead.phone?.replace(/\D/g, "") || "";
+    if (!phone) { toast.error("Lead sem telefone cadastrado."); return; }
+
+    if (file.size > 16 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Limite: 16 MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      await sendFile(lead.id, phone, file, organizationId, file.name);
+      const previewMsg: WebhookMessage = {
+        id: `local-file-${Date.now()}`,
+        leadId: lead.id,
+        direction: "sent",
+        content: `📎 ${file.name}`,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, previewMsg]);
+      toast.success(`Arquivo "${file.name}" enviado!`);
+    } catch (err: any) {
+      toast.error("Falha no envio do arquivo.", { description: err.message });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   if (!lead) return null;
@@ -170,7 +206,26 @@ export function LeadPanel({ lead, open, onClose }: LeadPanelProps) {
               </div>
             </ScrollArea>
 
-            <div className="p-3 border-t border-border/50 flex gap-2">
+            <div className="p-3 border-t border-border/50 flex gap-2 items-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                onChange={handleFileSelect}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 px-2 shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="Enviar arquivo"
+              >
+                {uploading
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Paperclip className="w-4 h-4" />}
+              </Button>
               <Input
                 placeholder="Digite uma mensagem..."
                 value={input}

@@ -266,10 +266,30 @@ export function PatientHistoryPanel({ patient, doctors, open, onOpenChange }: Pa
     const phone = ((patient as any).phone || "").replace(/\D/g, "");
     if (!phone) { toast.error("Paciente sem telefone cadastrado."); return; }
     const num = phone.startsWith("55") ? phone : `55${phone}`;
-    const msg = type === "recibo"
-      ? `Olá ${patient.name.split(" ")[0]}! Segue seu recibo/extrato da clínica. Total: ${formatCurrency(totalInvested)}. Qualquer dúvida estamos à disposição! 😊`
-      : `Olá ${patient.name.split(" ")[0]}! Segue seu prontuário atualizado. Total de ${consultations.length} consultas registradas. Qualquer dúvida estamos à disposição! 😊`;
+
+    // Build a rich text summary to send via WhatsApp
+    const firstName = patient.name.split(" ")[0];
+    const lines = type === "recibo"
+      ? [
+          `Olá ${firstName}! Segue seu resumo financeiro da clínica:`,
+          ``,
+          ...consultations.slice(0, 10).map(c =>
+            `📅 ${new Date(c.consultation_date + "T12:00:00").toLocaleDateString("pt-BR")} — ${c.procedure_name || "Consulta"}: ${formatCurrency(c.procedure_value)}`
+          ),
+          ``,
+          `💰 Total: ${formatCurrency(totalInvested)}`,
+          ``,
+          `Qualquer dúvida estamos à disposição! 😊`,
+        ]
+      : [
+          `Olá ${firstName}! Seu prontuário foi atualizado.`,
+          `Total de ${consultations.length} consulta(s) registrada(s).`,
+          `Qualquer dúvida estamos à disposição! 😊`,
+        ];
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
+    toast.info("WhatsApp aberto. Para enviar o PDF como arquivo, use o botão 📎 no chat do paciente no Kanban.");
   };
 
   if (!patient) return null;

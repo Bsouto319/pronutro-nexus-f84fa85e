@@ -148,5 +148,43 @@ export function useWebhook() {
     return postToWebhook({ action: "addNote", leadId, note });
   }, [postToWebhook]);
 
-  return { webhookUrl, fetchFromWebhook, postToWebhook, getMessages, sendMessage, toggleBot, takeOver, addNote };
+  // Upload a file to Supabase Storage and return the public URL.
+  const uploadFile = useCallback(async (file: File, organizationId: string): Promise<string> => {
+    const ext = file.name.split(".").pop() || "bin";
+    const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, "_");
+    const path = `${organizationId}/${Date.now()}-${safeName}`;
+
+    const { error } = await supabase.storage
+      .from("chat-files")
+      .upload(path, file, { contentType: file.type, upsert: false });
+
+    if (error) throw new Error(`Erro ao fazer upload: ${error.message}`);
+
+    const { data } = supabase.storage.from("chat-files").getPublicUrl(path);
+    return data.publicUrl;
+  }, []);
+
+  // Send a file to a lead via WhatsApp (n8n → UAZAPI /sendFile).
+  const sendFile = useCallback(async (
+    leadId: string,
+    phone: string,
+    file: File,
+    organizationId: string,
+    caption?: string,
+  ) => {
+    const fileUrl = await uploadFile(file, organizationId);
+    const isDoc = /pdf|doc|xls|csv|txt/i.test(file.name.split(".").pop() || "");
+    return postToWebhook({
+      action: "sendFile",
+      leadId,
+      phone: phone.replace(/\D/g, ""),
+      fileUrl,
+      filename: file.name,
+      caption: caption || file.name,
+      messageType: isDoc ? "document" : "image",
+      mimeType: file.type,
+    });
+  }, [uploadFile, postToWebhook]);
+
+  return { webhookUrl, fetchFromWebhook, postToWebhook, getMessages, sendMessage, sendFile, uploadFile, toggleBot, takeOver, addNote };
 }
